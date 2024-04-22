@@ -1,0 +1,20 @@
+name: hgrlab
+channels:
+  - apple
+  - conda-forge
+dependencies:
+    - python=3.8
+    - pip>=19.0
+    - ipykernel
+    - nbformat
+    - numpy
+    - h5py
+    - scipy
+    - scikit-learn
+    - pandas
+    - matplotlib
+    - seaborn
+    - plotly
+    
+    - pip:
+        - fastdtw
