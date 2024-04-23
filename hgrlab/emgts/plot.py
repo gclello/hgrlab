@@ -29,7 +29,7 @@ def plot_trial_channel(
     '''Plot single channel from one sEMG trial'''
 
     if segment and not segmentation_threshold:
-        raise Exception("Argument segmentation_threshold is required when segmentation is enabled")
+        raise Exception('Argument segmentation_threshold is required when segmentation is enabled')
     
     trial_set = emgts.EmgTrialSet(dataset_dir, user_id, dataset_type)
     
@@ -72,8 +72,8 @@ def plot_trial_channel(
 
     fig = px.line(df, x='t', y=y)
     fig.update_layout(
-        xaxis_title="Time (s)",
-        yaxis_title="Amplitude",
+        xaxis_title='Time (s)',
+        yaxis_title='Amplitude',
         legend_title=None,
         legend=dict(
             xanchor='right',
@@ -82,7 +82,7 @@ def plot_trial_channel(
             y=0.97,
         ),
         font=dict(
-            family="Times",
+            family='Times',
             size=16,
         ),
         width=width,
@@ -186,7 +186,7 @@ def plot_trial(
         subplot_titles=titles,
         shared_xaxes=True,
         vertical_spacing=0.1,
-        x_title="Time (s)",
+        x_title='Time (s)',
     )
     
     for channel in channels:    
@@ -216,7 +216,7 @@ def plot_trial(
         height=height,
         showlegend=False,
         font=dict(
-            family="Times",
+            family='Times',
             size=16,
         ),
         title_text=title,

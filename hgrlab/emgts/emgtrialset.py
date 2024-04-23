@@ -108,7 +108,7 @@ class EmgTrialSet:
         
     def get_trial_label(self, trial_id):
         with h5py.File(self.path, 'r') as f:            
-            return f[EmgTrialSet.HDF5_DS_LABELS_KEY][trial_id].decode("utf-8")
+            return f[EmgTrialSet.HDF5_DS_LABELS_KEY][trial_id].decode('utf-8')
         
     def get_all_trials(self):
         with h5py.File(self.path, 'r') as f:            

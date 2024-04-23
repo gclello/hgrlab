@@ -39,8 +39,8 @@ def k_fold_classification_cost(
         val_size_per_class
 ):
     result = extract_training_features(config)
-    features = result["features"]
-    labels = result["labels"]
+    features = result['features']
+    labels = result['labels']
     
     total_erros = 0
     
