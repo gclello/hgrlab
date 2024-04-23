@@ -6,10 +6,10 @@ from hgrlab.utils import sliding_window
 def segment(
     data,
     sampling_rate,
+    threshold,
     stft_window_length=25,
     stft_overlap=10,
     stft_nfft=50,
-    threshold=10,
     extra_samples=25,
     min_length=100
 ):
@@ -177,7 +177,10 @@ def get_activity_indices_from_trial_set_windows(
     if preprocess is None:
         preprocessed_data = trial_set_windows
     else:
-        preprocessed_data = preprocess(trial_set_windows)
+        preprocessed_data = preprocess(
+            trial_set_windows,
+            sampling_rate
+        )
         
     for trial_id, trial_windows in enumerate(trial_set_windows):
         data_length = trial_set.get_trial_data_length(trial_id)
