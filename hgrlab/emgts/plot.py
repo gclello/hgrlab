@@ -20,12 +20,17 @@ def plot_trial_channel(
         limit=None,
         preprocess=None,
         segment=None,
+        segmentation_threshold=None,
         show_title=False,
         output_dir=None,
         width=1000,
         scale=3,
 ):
     '''Plot single channel from one sEMG trial'''
+
+    if segment and not segmentation_threshold:
+        raise Exception("Argument segmentation_threshold is required when segmentation is enabled")
+    
     trial_set = emgts.EmgTrialSet(dataset_dir, user_id, dataset_type)
     
     sampling_rate = trial_set.sampling_rate
@@ -86,7 +91,12 @@ def plot_trial_channel(
     )
 
     if segment:
-        start_index, end_index = segment(preprocessed_data, sampling_rate)
+        start_index, end_index = segment(
+            preprocessed_data,
+            sampling_rate,
+            segmentation_threshold,
+        )
+
         fig.add_vrect(
             x0=start_index/sampling_rate,
             x1=end_index/sampling_rate,
@@ -110,6 +120,7 @@ def plot_trial(
         limit=None,
         preprocess=None,
         segment=None,
+        segmentation_threshold=None,
         show_title=False,
         output_dir=None,
         width=1000,
@@ -213,7 +224,12 @@ def plot_trial(
     )
 
     if segment:
-        start_index, end_index = segment(preprocessed_data, sampling_rate)
+        start_index, end_index = segment(
+            preprocessed_data,
+            sampling_rate,
+            segmentation_threshold,
+        )
+
         fig.add_vrect(
             x0=start_index/sampling_rate,
             x1=end_index/sampling_rate,
