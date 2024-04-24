@@ -43,7 +43,7 @@ To run this experiment, please follow these steps:
 
 This program will perform the following tasks:
 
-1. Download the HGR datasets used in the experiment, including data from 10
+1. Download the HGR datasets used in the experiment, including sEMG data from 10
 subjects
 2. Experiment 1: Determine the best segmentation thresholds for each of the 10
 subjects and 5 classifiers using *4*-fold cross-validation
