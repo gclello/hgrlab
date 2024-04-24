@@ -33,10 +33,10 @@ def get_validation_indices(labels, limit_per_class=2, offset=0):
     return is_validation
 
 def k_fold_classification_cost(
-        config,
-        classifier_name,
-        folds,
-        val_size_per_class
+    config,
+    classifier_name,
+    folds,
+    val_size_per_class
 ):
     result = extract_training_features(config)
     features = result['features']

@@ -6,7 +6,7 @@ import scipy.signal
 
 import fastdtw
 
-import emgts
+from ...emgts import EmgTrialSet
 from .segmentation import get_activity_indices
 from .segmentation import get_activity_indices_from_trial_set
 from .segmentation import get_activity_indices_from_trial_set_windows
@@ -126,7 +126,7 @@ def extract_training_features(config):
     activity_extra_samples = config['activity_extra_samples']
     activity_min_length = config['activity_min_length']
     
-    trial_set = emgts.EmgTrialSet(dataset_path, user_id, dataset_type)
+    trial_set = EmgTrialSet(dataset_path, user_id, dataset_type)
     trial_set_labels = trial_set.get_all_trials_labels()
     
     stft_window = scipy.signal.windows.hamming(stft_window_length)
@@ -203,7 +203,7 @@ def extract_test_features(config):
     training_activity_indices = training_data['activity_indices']
     training_class_centers = training_data['class_centers']
 
-    trial_set = emgts.EmgTrialSet(dataset_path, user_id, dataset_type)
+    trial_set = EmgTrialSet(dataset_path, user_id, dataset_type)
     trial_set_labels = trial_set.get_all_trials_labels()
     sampling_rate = trial_set.sampling_rate
     
