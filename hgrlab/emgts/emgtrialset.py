@@ -38,13 +38,6 @@ class EmgTrialSet:
     
     HDF5_ATTR_SAMPLING_RATE_KEY = 'sampling_rate'
     HDF5_ATTR_LABELS_KEY = 'labels'
-    
-    def __init__(self):
-        self.path = ''
-        self.user_id = 0
-        self.dataset_type = ''
-        self.sampling_rate = 0
-        self.labels = []
 
     def __init__(self, base_dir, user_id, dataset_type):
         self.load_trial_set(base_dir, user_id, dataset_type)
