@@ -15,7 +15,7 @@ Therefore, all commands must be executed from the project root directory
 
 ## Experiment delello_lnlm2024
 
-The source code of the experiment 'delello_lnlm2024' allows the reproducibility
+The source code of the experiment `delello_lnlm2024` allows the reproducibility
 of the results presented in the paper titled *"Comparison of sEMG-based Hand
 Gesture Classifiers"* authored by Guilherme C. De Lello, Gabriel S. Chaves,
 Juliano F. Caldeira, and Markus V.S. Lima.
