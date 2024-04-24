@@ -38,14 +38,18 @@ To run this experiment, please follow these steps:
 
 1. Download the project source code
 2. Open your terminal application
-3. Set the current directory to the project root directory `hgrlab`
-4. Run the command `python -m hgrlab.experiments.delello_lnlm2024`
+3. Make sure the required packages are installed
+4. Set the current directory to the project root directory `hgrlab`
+5. Run the command `python -m hgrlab.experiments.delello_lnlm2024`
 
 This program will perform the following tasks:
 
-1. Download the HGR datasets used in the experiment, including sEMG data from 10
+- Download the HGR datasets used in the experiment, including sEMG data from 10
 subjects
-2. Experiment 1: Determine the best segmentation thresholds for each of the 10
-subjects and 5 classifiers using *4*-fold cross-validation
-3. Experiment 2: Compare the accuracy of the HGR system for each of the 5
-classifiers
+- Experiment 1: Determine the best segmentation thresholds for each of the 10
+subjects and 5 classifiers using *4*-fold cross-validation (Table 1: *Optimum
+individual segmentation thresholds using 4-fold cross-validation*)
+- Experiment 2: Compare the accuracy of the HGR system for each of the 5
+classifiers (Table 2: *Mean accuracy and standard deviation of the HGR systems
+using different classifiers* and Table 3: *Mean accuracy and standard deviation
+by subject for different classifiers*)
