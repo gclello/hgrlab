@@ -150,7 +150,7 @@ def find_optimum_segmentation_thresholds_by_classifier_and_user(
                 print_progress(
                     task,
                     get_progress(classifier_id, i+1),
-                    'optimized classifier %s for user %2d of %2d' % (
+                    'optimized classifier %s for subject %2d of %2d' % (
                         classifier_name,
                         i+1,
                         len(user_configs),
@@ -164,7 +164,10 @@ def find_optimum_segmentation_thresholds_by_classifier_and_user(
     print_line_break()
     print_message('Finished segmentation threshold optimization')
 
-    result_message = 'Optimum segmentation thresholds by classifier (lines) and user (columns):\n'
+    result_message = '%s\n%s\n' % (
+        'Table 1: Optimum individual segmentation thresholds using 4-fold cross-validation',
+        'Lines: classifiers | Columns: subject'
+    )
     for classifier_id, classifier in enumerate(classifier_names):
         result_message = result_message + '\n%03s: %s' % (
             classifier,
@@ -275,8 +278,11 @@ def download_assets():
 def main():
     start_ts = datetime.datetime.now()
 
+    authors = 'Guilherme C. De Lello, Gabriel S. Chaves, Juliano F. Caldeira, and Markus V.S. Lima'
+
     print_line_break()
-    print_message('HGR experiments conducted by De Lello et al., March 2024')
+    print_message(
+        'HGR experiments conducted by %s on March 2024' % authors)
     print_line_break()
     download_assets()
 
