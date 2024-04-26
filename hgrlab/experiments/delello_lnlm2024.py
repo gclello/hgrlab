@@ -27,6 +27,9 @@ def print_message(message):
         MESSAGE=message,
     ))
 
+def print_result(message):
+    print(message)
+
 def print_line_break():
     print()
 
@@ -176,7 +179,7 @@ def find_optimum_segmentation_thresholds_by_classifier_and_user(
         )
     
     print_line_break()
-    print_message(result_message)
+    print_result(result_message)
     print_line_break()
     print_message('Finished segmentation threshold optimization')
     print_message('Time elapsed in experiment %d of %d: %s' % (
@@ -384,7 +387,7 @@ def assess_hgr_systems_by_classifier_and_user(
         )
     
     print_line_break()
-    print_message(result_message)
+    print_result(result_message)
     print_line_break()
     print_message('Finished evaluation of HGR systems')
     print_message('Time elapsed in experiment %d of %d: %s' % (
