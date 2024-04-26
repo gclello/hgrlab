@@ -522,7 +522,6 @@ def download_assets():
     end_ts = datetime.datetime.now()
     print_line_break()
     print_message('Finished downloading files')
-    print_line_break()
     print_message('Time elapsed downloading files: %s' % str(end_ts - start_ts))
 
     return asset_manager
@@ -556,7 +555,7 @@ def main():
     for i, experiment in enumerate(experiments):
         print_line_break()
         experiment(
-            experiment_id=i,
+            experiment_id=i+1,
             total_experiments=np.size(experiments),
             assets_dir=AssetManager.get_base_dir(),
             classifier_names=classifiers_names,
@@ -566,7 +565,6 @@ def main():
     end_ts = datetime.datetime.now()
     print_line_break()
     print_message('Finished all experiments')
-    print_line_break()
     print_message('Total time elapsed: %s' % str(end_ts - start_ts))
     print_line_break()
 
