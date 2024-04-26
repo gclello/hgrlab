@@ -27,6 +27,9 @@ def print_message(message):
         MESSAGE=message,
     ))
 
+def print_title(message):
+    print(message)
+
 def print_result(message):
     print(message)
 
@@ -531,8 +534,7 @@ def main():
     authors = 'Guilherme C. De Lello, Gabriel S. Chaves, Juliano F. Caldeira, and Markus V.S. Lima'
 
     print_line_break()
-    print_message(
-        'HGR experiments conducted by %s on March 2024' % authors)
+    print_title('HGR experiments conducted by %s on March 2024' % authors)
     print_line_break()
     download_assets()
 
