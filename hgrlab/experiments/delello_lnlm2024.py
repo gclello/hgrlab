@@ -112,7 +112,7 @@ def find_optimum_segmentation_thresholds_by_classifier_and_user(
         print_progress(
             task,
             get_progress(classifier_id),
-            'running %s-fold cross-validation on classifier %s' % (
+            'running %s-fold cross-validation on classifier %s...' % (
                 folds,
                 classifier_name,
             )
@@ -165,9 +165,6 @@ def find_optimum_segmentation_thresholds_by_classifier_and_user(
 
     end_ts = datetime.datetime.now()
 
-    print_line_break()
-    print_message('Finished segmentation threshold optimization')
-
     result_message = '%s\n%s\n' % (
         'Table 1: Optimum individual segmentation thresholds using 4-fold cross-validation',
         'Lines: classifiers | Columns: subjects'
@@ -181,6 +178,7 @@ def find_optimum_segmentation_thresholds_by_classifier_and_user(
     print_line_break()
     print_message(result_message)
     print_line_break()
+    print_message('Finished segmentation threshold optimization')
     print_message('Time elapsed in experiment %d of %d: %s' % (
         experiment_id,
         total_experiments,
@@ -331,7 +329,7 @@ def assess_hgr_systems_by_classifier_and_user(
         print_progress(
             task,
             get_progress(classifier_id),
-            'evaluating classifier %s' % classifier_name
+            'evaluating classifier %s...' % classifier_name
         )
 
         user_configs = []
@@ -374,9 +372,6 @@ def assess_hgr_systems_by_classifier_and_user(
 
     end_ts = datetime.datetime.now()
 
-    print_line_break()
-    print_message('Finished evaluation of HGR systems')
-
     result_message = '%s\n%s\n' % (
         'Table 2: Mean accuracy and standard deviation of the HGR systems using different classifiers',
         'Lines: classifiers | Columns: mean accuracy and standard deviation (%)'
@@ -391,6 +386,7 @@ def assess_hgr_systems_by_classifier_and_user(
     print_line_break()
     print_message(result_message)
     print_line_break()
+    print_message('Finished evaluation of HGR systems')
     print_message('Time elapsed in experiment %d of %d: %s' % (
         experiment_id,
         total_experiments,
@@ -492,7 +488,7 @@ def download_assets():
     print_progress(
         task,
         progress=0.0,
-        status='downloading %d files' % total_files,
+        status='downloading %d files...' % total_files,
     )
 
     for i, key in enumerate(assets.keys()):
