@@ -1,10 +1,14 @@
+import os
+
 import numpy as np
 import multiprocessing as mp
 import concurrent.futures
 import datetime
 
 from ..models.hgrdtw import k_fold_classification_cost
-from ..utils.asset_manager import AssetManager
+from ..models.hgrdtw import build_classifier, fit, predict
+from ..utils import load_pickle
+from ..utils import AssetManager
 
 def get_formatted_time():
     now = datetime.datetime.now()
@@ -70,11 +74,11 @@ def find_optimum_segmentation_threshold(config):
 def find_optimum_segmentation_thresholds_by_classifier_and_user(
     experiment_id,
     total_experiments,
-    dataset_path,
+    assets_dir,
     classifier_names,
     user_ids,
-    threshold_min,
-    threshold_max,
+    threshold_min=10,
+    threshold_max=20,
 ):
     start_ts = datetime.datetime.now()
 
@@ -118,7 +122,7 @@ def find_optimum_segmentation_thresholds_by_classifier_and_user(
 
         for user_id in user_ids:
             config = {
-                'database_path': dataset_path,
+                'database_path': assets_dir,
                 'database_type': 'training',
                 'classifier_name': classifier_name,
                 'user_id': user_id,
@@ -140,7 +144,7 @@ def find_optimum_segmentation_thresholds_by_classifier_and_user(
         
         with concurrent.futures.ProcessPoolExecutor(max_workers=num_workers) as executor:
             for i, config, result in zip(
-                np.arange(0, len(user_configs)),
+                np.arange(0, np.size(user_configs)),
                 user_configs,
                 executor.map(
                     find_optimum_segmentation_threshold,
@@ -153,7 +157,7 @@ def find_optimum_segmentation_thresholds_by_classifier_and_user(
                     'optimized classifier %s for subject %2d of %2d' % (
                         classifier_name,
                         i+1,
-                        len(user_configs),
+                         np.size(user_configs),
                     )
                 )
                 
@@ -166,7 +170,7 @@ def find_optimum_segmentation_thresholds_by_classifier_and_user(
 
     result_message = '%s\n%s\n' % (
         'Table 1: Optimum individual segmentation thresholds using 4-fold cross-validation',
-        'Lines: classifiers | Columns: subject'
+        'Lines: classifiers | Columns: subjects'
     )
     for classifier_id, classifier in enumerate(classifier_names):
         result_message = result_message + '\n%03s: %s' % (
@@ -185,14 +189,222 @@ def find_optimum_segmentation_thresholds_by_classifier_and_user(
 
     return optimum_thresholds
 
+def load_feature_set(assets_dir, classifier_name, user_id):
+    training_file = os.path.join(
+        assets_dir,
+        'training_features_%s.pickle' % classifier_name,
+    )
+
+    test_file = os.path.join(
+        assets_dir,
+        'test_features_m500_s10_%s.pickle' % classifier_name,
+    )
+
+    training_data = load_pickle(training_file)
+    test_data = load_pickle(test_file)
+
+    return training_data, test_data
+
+def reduce_window_predictions(
+    predictions,
+    window_start_activity_indexes,
+    window_end_activity_indexes,
+    window_length,
+):
+    reduced_prediction = 'relax'
+
+    has_full_muscle_contraction = np.logical_and(
+        window_start_activity_indexes != 0,
+        window_end_activity_indexes != window_length,
+    )
+
+    predictions[has_full_muscle_contraction == False] = 'relax'
+    predictions[0] = 'relax'
+    predictions[predictions == np.roll(predictions, 1)] = 'relax'
+
+    unique_labels = np.unique(predictions[predictions != 'relax'])
+
+    label_names = [
+        'relax',
+        'fist',
+        'wave_in',
+        'wave_out',
+        'fingers_spread',
+        'double_tap',
+    ]
+
+    if np.size(unique_labels) > 0:
+        label_ids = np.vectorize(lambda label:  label_names.index(label) + 1)(unique_labels)
+        order = np.argsort(label_ids)
+        ordered_unique_labels = unique_labels[order]
+        reduced_prediction = ordered_unique_labels[0]
+
+    return reduced_prediction
+
+def assess_hand_gesture_classification(config):
+    experiments = config['experiments']
+    user_id = config['user_id']
+    classifier_name = config['classifier_name']
+    assets_dir = config['assets_dir']
+
+    training_data, test_data = load_feature_set(
+        assets_dir,
+        classifier_name,
+        user_id
+    )
+
+    X_train = training_data[user_id]['features']
+    y_train = training_data[user_id]['labels']
+    X_test = test_data[user_id]['features']
+    y_test = test_data[user_id]['labels']
+    test_activity_indices = test_data[user_id]['activity_indexes']
+
+    test_trials = X_test.shape[0]
+    test_window_length = X_test.shape[2]
+
+    errors = np.zeros((experiments),dtype=np.uint32)
+    trials = np.zeros((experiments),dtype=np.uint32)
+
+    for experiment in np.arange(0, experiments):
+        model = build_classifier(classifier_name)
+        model.fit(X_train, y_train)
+
+        prediction = np.full((test_trials,), 'relax', dtype='U14')
+        
+        for trial_id, X_test_windows in enumerate(X_test):
+            test_window_predictions = model.predict(X_test_windows)
+
+            prediction[trial_id] = reduce_window_predictions(
+                test_window_predictions,
+                test_activity_indices[trial_id,:,0],
+                test_activity_indices[trial_id,:,1],
+                test_window_length,
+            )
+
+        errors[experiment] = np.size(y_test[y_test != prediction])
+        trials[experiment] = np.size(y_test)
+
+    return errors, trials
+
+def assess_hgr_systems_by_classifier_and_user(
+    experiment_id,
+    total_experiments,
+    assets_dir,
+    classifier_names,
+    user_ids,
+    experiment_runs=100,
+):
+    start_ts = datetime.datetime.now()
+
+    task = 'Assessing HGR systems'
+
+    max_workers = mp.cpu_count()
+    number_of_users = np.size(user_ids)
+    number_of_classifiers = np.size(classifier_names)
+
+    errors = np.zeros(
+        (number_of_classifiers,number_of_users,experiment_runs,),
+        dtype=np.uint32
+    )
+
+    trials = np.zeros(
+        (number_of_classifiers,number_of_users,experiment_runs,),
+        dtype=np.uint32
+    )
+
+    print_message(
+        'Experiment %d of %d: Compare the accuracy of HGR systems using %d classifiers ' % (
+            experiment_id,
+            total_experiments,
+            number_of_classifiers,
+    ))
+    print_message('Classifiers: %s' % classifier_names)
+    print_message('Number of subjects: %d' % number_of_users)
+
+    def get_progress(classifier_id, config_id=0):
+        current = number_of_users * classifier_id + config_id
+        total = number_of_users * number_of_classifiers
+        return current / total
+    
+    for classifier_id, classifier_name in enumerate(classifier_names):
+        print_line_break()
+        print_progress(
+            task,
+            get_progress(classifier_id),
+            'evaluating classifier %s' % classifier_name
+        )
+
+        user_configs = []
+
+        for user_id in user_ids:
+            config = {
+                'assets_dir': assets_dir,
+                'classifier_name': classifier_name,
+                'user_id': user_id,
+                'experiments': experiment_runs,
+            }
+            
+            user_configs.append(config)
+
+        with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
+            for i, config, result in zip(
+                np.arange(0, np.size(user_configs)),
+                user_configs,
+                executor.map(
+                    assess_hand_gesture_classification,
+                    user_configs,
+                )
+            ):
+                print_progress(
+                    task,
+                    get_progress(classifier_id, i+1),
+                    'evaluated classifier %s for subject %2d of %2d' % (
+                        classifier_name,
+                        i+1,
+                        np.size(user_configs),
+                    )
+                )
+                
+                errors[classifier_id,i,:] = result[0]
+                trials[classifier_id,i,:] = result[1]
+
+    accuracy = (trials - errors) / trials
+    accuracy_mean = accuracy.mean(axis=(1,2))
+    accuracy_per_experiment = accuracy.mean(axis=1)
+
+    end_ts = datetime.datetime.now()
+
+    print_line_break()
+    print_message('Finished evaluation of HGR systems')
+
+    result_message = '%s\n%s\n' % (
+        'Table 2: Mean accuracy and standard deviation of the HGR systems using different classifiers',
+        'Lines: classifiers | Columns: mean accuracy and standard deviation (%)'
+    )
+    for classifier_id, classifier in enumerate(classifier_names):
+        result_message = result_message + '\n%03s: %.1f \u00B1 %.1f' % (
+            classifier,
+            accuracy_mean[classifier_id] * 100,
+            accuracy_per_experiment[classifier_id].std(ddof=1) * 100,
+        )
+    
+    print_line_break()
+    print_message(result_message)
+    print_line_break()
+    print_message('Time elapsed in experiment %d of %d: %s' % (
+        experiment_id,
+        total_experiments,
+        str(end_ts - start_ts),
+    ))
+
 def download_assets():
     start_ts = datetime.datetime.now()
     
     task = 'Download HGR dataset'
 
-    assets = AssetManager()
+    asset_manager = AssetManager()
 
-    semg_training_files = {
+    assets = {
         'subject1_training': {
             'remote_id': '1-F1p0N5x2C3fey9GupDYlmHob0l_ZIMg',
             'filename': 'subject1_training.h5'
@@ -233,9 +445,49 @@ def download_assets():
             'remote_id': '1-3aMg8xDAVBknSLWnNbNtX8dHiNjZofe',
             'filename': 'subject10_training.h5'
         },
+        'training_features_svm': {
+            'remote_id': '10UBEz8HBpkAwKRF6xlgG_K7LGCFM7qlW',
+            'filename': 'training_features_svm.pickle'
+        },
+        'test_features_svm': {
+            'remote_id': '13pfALxZ8u_dzi_b7c2RBmlQeNXLBRgVt',
+            'filename': 'test_features_m500_s10_svm.pickle'
+        },
+        'training_features_lr': {
+            'remote_id': '1a1wgDWTYZsvAfhs-Ltu-6wTOo4kGvTiL',
+            'filename': 'training_features_lr.pickle'
+        },
+        'test_features_lr': {
+            'remote_id': '1j4J3Yub1ksg6Y1hc9nggdKgIHuaIN300',
+            'filename': 'test_features_m500_s10_lr.pickle'
+        },
+        'training_features_lda': {
+            'remote_id': '1hKesrsPOf0_kCO0lhhEjJhipIupDXFqe',
+            'filename': 'training_features_lda.pickle'
+        },
+        'test_features_lda': {
+            'remote_id': '1u9b29jWvO0ZNFv-LeHj-aH5GtP5fcmFv',
+            'filename': 'test_features_m500_s10_lda.pickle'
+        },
+        'training_features_knn': {
+            'remote_id': '1n2hwI-9voM8ImDBTZ1hPcXd1PaMaJjAw',
+            'filename': 'training_features_knn.pickle'
+        },
+        'test_features_knn': {
+            'remote_id': '1ghknJcGayi1EOEUvFNx1jbHUz5XYzvuW',
+            'filename': 'test_features_m500_s10_knn.pickle'
+        },
+        'training_features_dt': {
+            'remote_id': '1582s-IC2ThcACjJ7WdcuNODyd_0UwTsG',
+            'filename': 'training_features_dt.pickle'
+        },
+        'test_features_dt': {
+            'remote_id': '12PbHAr_Jo_u-HUibMj2lDCMalta9gZvU',
+            'filename': 'test_features_m500_s10_dt.pickle'
+        },
     }
 
-    total_files = len(semg_training_files.keys())
+    total_files =  len(assets.keys())
 
     print_progress(
         task,
@@ -243,14 +495,14 @@ def download_assets():
         status='downloading %d files' % total_files,
     )
 
-    for i, key in enumerate(semg_training_files.keys()):
-        assets.add_remote_asset(
+    for i, key in enumerate(assets.keys()):
+        asset_manager.add_remote_asset(
             key,
-            semg_training_files[key]['remote_id'],
-            semg_training_files[key]['filename'],
+            assets[key]['remote_id'],
+            assets[key]['filename'],
         )
 
-        cached = assets.download_asset(key)
+        cached = asset_manager.download_asset(key)
 
         if cached:
             message = 'found file %d of %d in local cache (%s)'
@@ -263,7 +515,7 @@ def download_assets():
             status=message % (
                 i+1,
                 total_files,
-                semg_training_files[key]['filename'],
+                assets[key]['filename'],
             ),
         )
     
@@ -273,7 +525,7 @@ def download_assets():
     print_line_break()
     print_message('Time elapsed downloading files: %s' % str(end_ts - start_ts))
 
-    return assets
+    return asset_manager
 
 def main():
     start_ts = datetime.datetime.now()
@@ -296,16 +548,20 @@ def main():
 
     user_ids = np.arange(1, 11)
 
-    print_line_break()
-    find_optimum_segmentation_thresholds_by_classifier_and_user(
-        experiment_id=1,
-        total_experiments=1,
-        dataset_path=AssetManager.get_base_dir(),
-        classifier_names=classifiers_names,
-        user_ids=user_ids,
-        threshold_min=10,
-        threshold_max=20,
-    )
+    experiments = [
+        find_optimum_segmentation_thresholds_by_classifier_and_user,
+        assess_hgr_systems_by_classifier_and_user,
+    ]
+
+    for i, experiment in enumerate(experiments):
+        print_line_break()
+        experiment(
+            experiment_id=i,
+            total_experiments=np.size(experiments),
+            assets_dir=AssetManager.get_base_dir(),
+            classifier_names=classifiers_names,
+            user_ids=user_ids,
+        )
 
     end_ts = datetime.datetime.now()
     print_line_break()
