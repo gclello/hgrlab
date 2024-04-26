@@ -375,22 +375,53 @@ def assess_hgr_systems_by_classifier_and_user(
     accuracy = (trials - errors) / trials
     accuracy_mean = accuracy.mean(axis=(1,2))
     accuracy_per_experiment = accuracy.mean(axis=1)
+    accuracy_per_user = accuracy.mean(axis=2)
 
     end_ts = datetime.datetime.now()
 
-    result_message = '%s\n%s\n' % (
-        'Table 2: Mean accuracy and standard deviation of the HGR systems using different classifiers',
-        'Lines: classifiers | Columns: mean accuracy and standard deviation (%)'
-    )
+    table2 = ''
     for classifier_id, classifier in enumerate(classifier_names):
-        result_message = result_message + '\n%03s: %.1f \u00B1 %.1f' % (
+        table2 = '%s\n%03s: %.1f \u00B1 %.1f' % (
+            table2,
             classifier,
             accuracy_mean[classifier_id] * 100,
             accuracy_per_experiment[classifier_id].std(ddof=1) * 100,
         )
+
+    accuracy_by_classifier_output = '%s\n%s\n%s' % (
+        'Table 2: Mean accuracy and standard deviation of the HGR systems using different classifiers',
+        'Lines: classifiers | Data: mean accuracy and standard deviation (%)',
+        table2
+    )
+    
+    table3 = '    ' + '    '.join(['%12s' % name for name in classifier_names])
+    for i, user_id in enumerate(user_ids):
+        table3 = table3 + '\n#%02s:' % user_id
+        for classifier_id, classifier in enumerate(classifier_names):
+            table3 = '{TABLE3}    {MEAN:5.1f} \u00B1 {STD:4.1f}'.format(
+                TABLE3=table3,
+                MEAN=accuracy_per_user[classifier_id,i] * 100,
+                STD=accuracy[classifier_id,i].std(ddof=1) * 100,
+            )
+
+    table3 = table3 + '\n\nAVG '
+    for classifier_id, classifier in enumerate(classifier_names):
+        table3 = '{TABLE3}    {MEAN:5.1f} \u00B1 {STD:4.1f}'.format(
+            TABLE3=table3,
+            MEAN=accuracy_mean[classifier_id] * 100,
+            STD=accuracy_per_user.std(axis=1,ddof=1)[classifier_id] * 100,
+        )
+
+    accuracy_by_subject_output = '%s\n%s\n%s' % (
+        'Table 3: Mean accuracy and standard deviation by subject for different classifiers',
+        'Lines: subjects | Columns: classifiers | Data: mean accuracy and standard deviation (%)',
+        table3,
+    )
     
     print_line_break()
-    print_result(result_message)
+    print_result(accuracy_by_classifier_output)
+    print_line_break()
+    print_result(accuracy_by_subject_output)
     print_line_break()
     print_message('Finished evaluation of HGR systems')
     print_message('Time elapsed in experiment %d of %d: %s' % (
@@ -507,9 +538,9 @@ def download_assets():
         cached = asset_manager.download_asset(key)
 
         if cached:
-            message = 'found file %d of %d in local cache (%s)'
+            message = 'found file %2d of %2d in local cache (%s)'
         else:
-            message = 'downloaded file %d of %d (%s)' 
+            message = 'downloaded file %2d of %2d (%s)' 
 
         print_progress(
             task,
