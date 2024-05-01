@@ -391,7 +391,7 @@ def assess_hgr_systems_by_classifier_and_user(
     accuracy_by_classifier_output = '%s\n%s\n%s' % (
         'Table 2: Mean accuracy and standard deviation of the HGR systems using different classifiers',
         'Lines: classifiers | Data: mean accuracy and standard deviation (%)',
-        table2
+        table2,
     )
     
     table3 = '    ' + '    '.join(['%12s' % name for name in classifier_names])

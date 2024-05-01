@@ -8,7 +8,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-import emgts
+from .emgtrialset import EmgTrialSet
 
 def plot_trial_channel(
         dataset_dir,
@@ -31,7 +31,7 @@ def plot_trial_channel(
     if segment and not segmentation_threshold:
         raise Exception('Argument segmentation_threshold is required when segmentation is enabled')
     
-    trial_set = emgts.EmgTrialSet(dataset_dir, user_id, dataset_type)
+    trial_set = EmgTrialSet(dataset_dir, user_id, dataset_type)
     
     sampling_rate = trial_set.sampling_rate
     trial_data = trial_set.get_trial(trial_id)
@@ -129,7 +129,7 @@ def plot_trial(
 ):
     '''Plot all channels from one sEMG trial'''
 
-    trial_set = emgts.EmgTrialSet(dataset_dir, user_id, dataset_type)
+    trial_set = EmgTrialSet(dataset_dir, user_id, dataset_type)
     
     sampling_rate = trial_set.sampling_rate
     trial_data = trial_set.get_trial(trial_id)
