@@ -45,9 +45,6 @@ def print_progress(task, progress, status):
     ))
 
 def find_optimum_segmentation_threshold(config):
-    classifier_name = config['classifier_name']
-    folds = config['folds']
-    val_size_per_class = config['val_size_per_class']
     threshold_min = config['threshold_min']
     threshold_max = config['threshold_max']
     threshold_direction = config['threshold_direction']
@@ -63,12 +60,7 @@ def find_optimum_segmentation_threshold(config):
     for threshold_id, threshold in enumerate(thresholds):
         config['activity_threshold'] = threshold
 
-        errors = k_fold_classification_cost(
-            config,
-            classifier_name,
-            folds,
-            val_size_per_class,
-        )
+        errors = k_fold_classification_cost(config)
 
         thresholds_errors[threshold_id] = errors
 
@@ -92,8 +84,6 @@ def find_optimum_segmentation_thresholds_by_classifier_and_user(
 
     folds = 4
     val_size_per_class = 2
-    window_length = 500
-    window_stride = 10
 
     print_message(
         'Experiment %d of %d: Optimize HGR segmentation thresholds using %d-fold cross-validation' % (
@@ -135,10 +125,8 @@ def find_optimum_segmentation_thresholds_by_classifier_and_user(
                 'threshold_min': threshold_min,
                 'threshold_max': threshold_max,
                 'threshold_direction': 'desc',
-                'folds': folds,
-                'val_size_per_class': val_size_per_class,
-                'feature_window_length': window_length,
-                'feature_overlap_length': window_length - window_stride,
+                'cross_validation_folds': folds,
+                'cross_validation_val_size_per_class': val_size_per_class,
                 'stft_window_length': 25,
                 'stft_window_overlap': 10,
                 'stft_nfft': 50,
