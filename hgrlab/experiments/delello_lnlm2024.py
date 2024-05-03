@@ -181,22 +181,6 @@ def find_optimum_segmentation_thresholds_by_classifier_and_user(
 
     return optimum_thresholds
 
-def load_feature_set(assets_dir, classifier_name, user_id):
-    training_file = os.path.join(
-        assets_dir,
-        'training_features_%s.pickle' % classifier_name,
-    )
-
-    test_file = os.path.join(
-        assets_dir,
-        'test_features_m500_s10_%s.pickle' % classifier_name,
-    )
-
-    training_data = load_pickle(training_file)
-    test_data = load_pickle(test_file)
-
-    return training_data, test_data
-
 def reduce_window_predictions(
     predictions,
     window_start_activity_indexes,
@@ -237,13 +221,11 @@ def assess_hand_gesture_classification(config):
     experiments = config['experiments']
     user_id = config['user_id']
     classifier_name = config['classifier_name']
-    assets_dir = config['assets_dir']
+    training_file = config['training_file']
+    test_file = config['test_file']
 
-    training_data, test_data = load_feature_set(
-        assets_dir,
-        classifier_name,
-        user_id
-    )
+    training_data = load_pickle(training_file)
+    test_data = load_pickle(test_file)
 
     X_train = training_data[user_id]['features']
     y_train = training_data[user_id]['labels']
@@ -328,9 +310,20 @@ def assess_hgr_systems_by_classifier_and_user(
 
         user_configs = []
 
+        training_file = os.path.join(
+            assets_dir,
+            'training_features_%s.pickle' % classifier_name,
+        )
+
+        test_file = os.path.join(
+            assets_dir,
+            'test_features_m500_s10_%s.pickle' % classifier_name,
+        )
+
         for user_id in user_ids:
             config = {
-                'assets_dir': assets_dir,
+                'training_file': training_file,
+                'test_file': test_file,
                 'classifier_name': classifier_name,
                 'user_id': user_id,
                 'experiments': experiment_runs,
