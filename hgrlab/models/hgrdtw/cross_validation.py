@@ -34,6 +34,12 @@ def get_validation_indices(labels, limit_per_class=2, offset=0):
 
 def k_fold_classification_cost(config):
     classifier_name = config['classifier_name']
+    
+    if 'classifier_options' in config:
+        classifier_options = config['classifier_options']
+    else:
+        classifier_options = None
+    
     folds = config['cross_validation_folds']
     val_size_per_class = config['cross_validation_val_size_per_class']
 
@@ -51,7 +57,7 @@ def k_fold_classification_cost(config):
             offset=offset,
         )
     
-        model = build_classifier(classifier_name)
+        model = build_classifier(classifier_name, classifier_options)
         fit(model, X_train, y_train)
         predictions = predict(model, X_val)
     

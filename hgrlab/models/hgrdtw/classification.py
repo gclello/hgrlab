@@ -5,23 +5,51 @@ import sklearn.discriminant_analysis
 import sklearn.neighbors
 import sklearn.tree
 
-def build_classifier(classifier_name):
+def build_classifier(classifier_name, classifier_options={}):
+    def merge_options(options1, options2):
+        options1 = {} if options1 is None else options1
+        options2 = {} if options2 is None else options2
+        for option in options2:
+            options1[option] = options2[option]
+        return options1
+
     if classifier_name == 'svm':
-        model = sklearn.svm.SVC(cache_size = 8192, gamma = 'auto')
+        model = sklearn.svm.SVC(**merge_options({
+            'cache_size': 8192,
+            'gamma': 'auto',
+            },
+            classifier_options,
+        ))
     elif classifier_name == 'lr':
-        model = sklearn.linear_model.LogisticRegression(
-            solver='liblinear',
-            penalty='l2',
-        )
+        model = sklearn.linear_model.LogisticRegression(**merge_options({
+                'solver': 'liblinear',
+                'penalty': 'l2',
+            },
+            classifier_options,
+        ))
     elif classifier_name == 'lda':
-        model = sklearn.discriminant_analysis.LinearDiscriminantAnalysis()
+        model = sklearn.discriminant_analysis.LinearDiscriminantAnalysis(
+            **merge_options(
+                {'solver': 'svd'},
+                classifier_options,
+            )
+        )
     elif classifier_name == 'knn':
-        model = sklearn.neighbors.KNeighborsClassifier(n_neighbors=5)
+        model = sklearn.neighbors.KNeighborsClassifier(**merge_options({
+                'n_neighbors': 5,
+            },
+            classifier_options
+        ))
     elif classifier_name == 'dt':
-        model = sklearn.tree.DecisionTreeClassifier()
+        model = sklearn.tree.DecisionTreeClassifier(
+            **merge_options(
+                {},
+                classifier_options,
+            )
+        )
     else:
         raise Exception('Invalid classifier')
-        
+    
     return model
 
 def fit(model, X_train, y_train):
