@@ -35,6 +35,7 @@ class EmgTrialSet:
     HDF5_DS_DATA_KEY = 'data'
     HDF5_DS_DATA_LENGTH_KEY = 'data_length'
     HDF5_DS_LABELS_KEY = 'labels'
+    HDF5_DS_INDICES_KEY = 'indices'
     
     HDF5_ATTR_SAMPLING_RATE_KEY = 'sampling_rate'
     HDF5_ATTR_LABELS_KEY = 'labels'
@@ -97,7 +98,14 @@ class EmgTrialSet:
         with h5py.File(self.path, 'r') as f:
             if EmgTrialSet.HDF5_DS_LABELS_KEY in f.keys():
                 return f[EmgTrialSet.HDF5_DS_LABELS_KEY][trial_id].decode('utf-8')
-        
+
+        return None
+    
+    def get_trial_indices(self, trial_id):
+        with h5py.File(self.path, 'r') as f:
+            if EmgTrialSet.HDF5_DS_INDICES_KEY in f.keys():
+                return f[EmgTrialSet.HDF5_DS_INDICES_KEY][trial_id]
+
         return None
         
     def get_all_trials(self):
@@ -112,5 +120,12 @@ class EmgTrialSet:
         with h5py.File(self.path, 'r') as f:
             if EmgTrialSet.HDF5_DS_LABELS_KEY in f.keys():
                 return f[EmgTrialSet.HDF5_DS_LABELS_KEY][:].astype(str)
-        
+            
+        return None
+    
+    def get_all_trials_indices(self):
+        with h5py.File(self.path, 'r') as f:
+            if EmgTrialSet.HDF5_DS_INDICES_KEY in f.keys():
+                return f[EmgTrialSet.HDF5_DS_INDICES_KEY][:]
+            
         return None
