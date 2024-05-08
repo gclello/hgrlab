@@ -55,31 +55,25 @@ class EmgTrialSet:
         path = get_path(base_dir, user_id, dataset_type)
         
         with h5py.File(path, 'r') as f:
-            if (EmgTrialSet.HDF5_DS_DATA_KEY in f.keys()) is False:
+            if EmgTrialSet.HDF5_DS_DATA_KEY in f.keys() is False:
                 raise EmgTrialSetError(
                     message='EmgTrialSet is missing dataset "%s" (%s)' % (EmgTrialSet.HDF5_DS_DATA_KEY, path),
                     details={'code': 'Invalid DS key', 'path': path, 'key': EmgTrialSet.HDF5_DS_DATA_KEY}
                 )
                 
-            if (EmgTrialSet.HDF5_DS_DATA_LENGTH_KEY in f.keys()) is False:
+            if EmgTrialSet.HDF5_DS_DATA_LENGTH_KEY in f.keys() is False:
                 raise EmgTrialSetError(
                     message='EmgTrialSet is missing dataset "%s" (%s)' % (EmgTrialSet.HDF5_DS_DATA_LENGTH_KEY, path),
                     details={'code': 'Invalid DS key', 'path': path, 'key': EmgTrialSet.HDF5_DS_DATA_LENGTH_KEY}
                 )
                 
-            if (EmgTrialSet.HDF5_DS_LABELS_KEY in f.keys()) is False:
-                raise EmgTrialSetError(
-                    message='EmgTrialSet is missing dataset "%s" (%s)' % (EmgTrialSet.HDF5_DS_LABELS_KEY, path),
-                    details={'code': 'Invalid DS key', 'path': path, 'key': EmgTrialSet.HDF5_DS_LABELS_KEY}
-                )
-                
-            if (EmgTrialSet.HDF5_ATTR_SAMPLING_RATE_KEY in f.attrs.keys()) is False:
+            if EmgTrialSet.HDF5_ATTR_SAMPLING_RATE_KEY in f.attrs.keys() is False:
                 raise EmgTrialSetError(
                     message='EmgTrialSet is missing attribute "%s" (%s)' % (EmgTrialSet.HDF5_ATTR_SAMPLING_RATE_KEY, path),
                     details={'code': 'Invalid attribute key', 'path': path, 'key': EmgTrialSet.HDF5_ATTR_SAMPLING_RATE_KEY}
                 )
                 
-            if (EmgTrialSet.HDF5_ATTR_LABELS_KEY in f.attrs.keys()) is False:
+            if EmgTrialSet.HDF5_ATTR_LABELS_KEY in f.attrs.keys() is False:
                 raise EmgTrialSetError(
                     message='EmgTrialSet is missing attribute "%s" (%s)' % (EmgTrialSet.HDF5_ATTR_LABELS_KEY, path),
                     details={'code': 'Invalid attribute key', 'path': path, 'key': EmgTrialSet.HDF5_ATTR_LABELS_KEY}
@@ -92,25 +86,31 @@ class EmgTrialSet:
             self.labels = f.attrs[EmgTrialSet.HDF5_ATTR_LABELS_KEY]
             
     def get_trial(self, trial_id):
-        with h5py.File(self.path, 'r') as f:            
+        with h5py.File(self.path, 'r') as f:
             return f[EmgTrialSet.HDF5_DS_DATA_KEY][trial_id, :, :]
         
     def get_trial_data_length(self, trial_id):
-        with h5py.File(self.path, 'r') as f:            
+        with h5py.File(self.path, 'r') as f:
             return f[EmgTrialSet.HDF5_DS_DATA_LENGTH_KEY][trial_id]
         
     def get_trial_label(self, trial_id):
-        with h5py.File(self.path, 'r') as f:            
-            return f[EmgTrialSet.HDF5_DS_LABELS_KEY][trial_id].decode('utf-8')
+        with h5py.File(self.path, 'r') as f:
+            if EmgTrialSet.HDF5_DS_LABELS_KEY in f.keys():
+                return f[EmgTrialSet.HDF5_DS_LABELS_KEY][trial_id].decode('utf-8')
+        
+        return None
         
     def get_all_trials(self):
-        with h5py.File(self.path, 'r') as f:            
+        with h5py.File(self.path, 'r') as f:
             return f[EmgTrialSet.HDF5_DS_DATA_KEY][:, :, :]
         
     def get_all_trials_data_length(self):
-        with h5py.File(self.path, 'r') as f:            
+        with h5py.File(self.path, 'r') as f:
             return f[EmgTrialSet.HDF5_DS_DATA_LENGTH_KEY][:]
         
     def get_all_trials_labels(self):
-        with h5py.File(self.path, 'r') as f:            
-            return f[EmgTrialSet.HDF5_DS_LABELS_KEY][:].astype(str)
+        with h5py.File(self.path, 'r') as f:
+            if EmgTrialSet.HDF5_DS_LABELS_KEY in f.keys():
+                return f[EmgTrialSet.HDF5_DS_LABELS_KEY][:].astype(str)
+        
+        return None
