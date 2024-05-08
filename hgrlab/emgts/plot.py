@@ -27,10 +27,6 @@ def plot_trial_channel(
         scale=3,
 ):
     '''Plot single channel from one sEMG trial'''
-
-    if segment and not segmentation_threshold:
-        raise Exception('Argument segmentation_threshold is required when segmentation is enabled')
-    
     trial_set = EmgTrialSet(dataset_dir, user_id, dataset_type)
     
     sampling_rate = trial_set.sampling_rate
@@ -90,21 +86,36 @@ def plot_trial_channel(
         title_x=0.5,
     )
 
-    if segment:
-        start_index, end_index = segment(
-            preprocessed_data,
-            sampling_rate,
-            segmentation_threshold,
-        )
+    if segment is not None and segment is not False:
+        should_display_segmentation = True
 
-        fig.add_vrect(
-            x0=start_index/sampling_rate,
-            x1=end_index/sampling_rate,
-            fillcolor='LightSeaGreen',
-            opacity=0.2,
-            layer='below',
-            line_width=0,
-        )
+        if callable(segment):
+            if segmentation_threshold is None:
+                raise Exception('Argument segmentation_threshold is required when segmentation is callable')
+    
+            start_index, end_index = segment(
+                preprocessed_data,
+                sampling_rate,
+                segmentation_threshold,
+            )
+        elif segment is True:
+            trial_indices = trial_set.get_trial_indices(trial_id)
+            if trial_indices is not None:
+                start_index, end_index = trial_indices
+            else:
+                should_display_segmentation = False
+        else:
+            start_index, end_index = segment
+
+        if should_display_segmentation:
+            fig.add_vrect(
+                x0=start_index/sampling_rate,
+                x1=end_index/sampling_rate,
+                fillcolor='LightSeaGreen',
+                opacity=0.2,
+                layer='below',
+                line_width=0,
+            )
 
     if output_dir:
         fig.write_image(output_dir, engine='kaleido', scale=scale, width=width)
@@ -223,21 +234,36 @@ def plot_trial(
         title_x=0.5,
     )
 
-    if segment:
-        start_index, end_index = segment(
-            preprocessed_data,
-            sampling_rate,
-            segmentation_threshold,
-        )
+    if segment is not None and segment is not False:
+        should_display_segmentation = True
 
-        fig.add_vrect(
-            x0=start_index/sampling_rate,
-            x1=end_index/sampling_rate,
-            fillcolor='LightSeaGreen', #'LightSalmon', #'RoyalBlue',
-            opacity=0.2,
-            layer='below',
-            line_width=0,
-        )
+        if callable(segment):
+            if segmentation_threshold is None:
+                raise Exception('Argument segmentation_threshold is required when segmentation is callable')
+    
+            start_index, end_index = segment(
+                preprocessed_data,
+                sampling_rate,
+                segmentation_threshold,
+            )
+        elif segment is True:
+            trial_indices = trial_set.get_trial_indices(trial_id)
+            if trial_indices is not None:
+                start_index, end_index = trial_indices
+            else:
+                should_display_segmentation = False
+        else:
+            start_index, end_index = segment
+
+        if should_display_segmentation:
+            fig.add_vrect(
+                x0=start_index/sampling_rate,
+                x1=end_index/sampling_rate,
+                fillcolor='LightSeaGreen',
+                opacity=0.2,
+                layer='below',
+                line_width=0,
+            )
 
     if output_dir:
         fig.write_image(output_dir, engine='kaleido', scale=scale, width=width, height=height)
