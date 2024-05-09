@@ -10,7 +10,7 @@ from ..models.hgrdtw import build_classifier, fit, predict
 from ..utils import load_pickle
 from ..utils import AssetManager
 
-from ..experiments import print_message, print_title, print_progress, print_result, print_line_break
+from ..experiments import run_experiments, print_message, print_title, print_progress, print_result, print_line_break
 
 def find_optimum_segmentation_threshold(config):
     threshold_min = config['threshold_min']
@@ -509,14 +509,8 @@ def download_assets():
     return asset_manager
 
 def main():
-    start_ts = datetime.datetime.now()
-
     authors = 'Guilherme C. De Lello, Gabriel S. Chaves, Juliano F. Caldeira, and Markus V.S. Lima'
-
-    print_line_break()
-    print_title('HGR experiments conducted by %s on March 2024' % authors)
-    print_line_break()
-    download_assets()
+    title = 'HGR experiments conducted by %s on March 2024' % authors
 
     classifiers_names = [
         'svm',
@@ -533,21 +527,14 @@ def main():
         assess_hgr_systems_by_classifier_and_user,
     ]
 
-    for i, experiment in enumerate(experiments):
-        print_line_break()
-        experiment(
-            experiment_id=i+1,
-            total_experiments=np.size(experiments),
-            assets_dir=AssetManager.get_base_dir(),
-            classifier_names=classifiers_names,
-            user_ids=user_ids,
-        )
-
-    end_ts = datetime.datetime.now()
-    print_line_break()
-    print_message('Finished all experiments')
-    print_message('Total time elapsed: %s' % str(end_ts - start_ts))
-    print_line_break()
+    run_experiments(
+        title,
+        setup=download_assets,
+        experiments=experiments,
+        assets_dir=AssetManager.get_base_dir(),
+        classifier_names=classifiers_names,
+        user_ids=user_ids,
+    )
 
 if __name__ == '__main__':
     main()
