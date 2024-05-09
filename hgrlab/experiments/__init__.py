@@ -3,18 +3,20 @@ import numpy as np
 
 def run_experiments(
     title,
-    setup,
     experiments,
     assets_dir,
     classifier_names,
     user_ids,
+    setup=None,
 ):
     start_ts = datetime.datetime.now()
 
     print_line_break()
     print_title(title)
     print_line_break()
-    setup()
+
+    if callable(setup):
+        setup()
 
     for i, experiment in enumerate(experiments):
         print_line_break()
