@@ -28,7 +28,7 @@ def find_optimum_segmentation_threshold(config):
     for threshold_id, threshold in enumerate(thresholds):
         config['activity_threshold'] = threshold
 
-        errors = k_fold_classification_cost(config)
+        errors, predictions = k_fold_classification_cost(config)
 
         thresholds_errors[threshold_id] = errors
 

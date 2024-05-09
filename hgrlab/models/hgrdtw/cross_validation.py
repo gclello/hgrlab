@@ -47,7 +47,8 @@ def k_fold_classification_cost(config):
     features = result['features']
     labels = result['labels']
     
-    total_erros = 0
+    total_errors = 0
+    total_predictions = 0
     
     for offset in np.arange(0, folds):
         X_train, y_train, X_val, y_val = train_val_split(
@@ -61,8 +62,11 @@ def k_fold_classification_cost(config):
         fit(model, X_train, y_train)
         predictions = predict(model, X_val)
     
-        correct_predictions = (predictions == y_val)
-        errors = np.size(y_val) - np.count_nonzero(correct_predictions)
-        total_erros = total_erros + errors
+        number_of_predictions = np.size(y_val)
+        correct_predictions = np.count_nonzero(predictions == y_val)
+        errors = number_of_predictions - correct_predictions
+
+        total_predictions = total_predictions + number_of_predictions
+        total_errors = total_errors + errors
     
-    return total_erros
+    return total_errors, total_predictions
