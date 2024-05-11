@@ -13,9 +13,9 @@ def run_experiments(
 
     print_line_break()
     print_title(title)
-    print_line_break()
 
     if callable(setup):
+        print_line_break()
         setup()
 
     for i, experiment in enumerate(experiments):
