@@ -6,7 +6,7 @@ from .feature_extraction import extract_test_features
 
 from .classification import build_classifier, fit, predict
 
-from .cross_validation import train_val_split, k_fold_classification_cost
+from .cross_validation import k_fold_classification_cost
 
 __all__ = [
     'preprocess',
@@ -16,6 +16,5 @@ __all__ = [
     'build_classifier',
     'fit',
     'predict',
-    'train_val_split',
     'k_fold_classification_cost',
 ]

@@ -1,10 +1,11 @@
+import math
 import numpy as np
 
 from .feature_extraction import extract_training_features
 from .classification import build_classifier, fit, predict
 
-def train_val_split(X, y, val_size_per_class, offset=0):
-    validation_indices = get_validation_indices(
+def fixed_train_val_split(X, y, val_size_per_class, offset=0):
+    validation_indices = get_fixed_validation_indices(
         y,
         limit_per_class=val_size_per_class,
         offset=offset,
@@ -18,13 +19,45 @@ def train_val_split(X, y, val_size_per_class, offset=0):
 
     return X_train, y_train, X_val, y_val
 
-def get_validation_indices(labels, limit_per_class=2, offset=0):
+def balanced_train_val_split(X, y, total_folds, fold=0):
+    validation_indices = get_balanced_validation_indices(
+        y,
+        total_folds=total_folds,
+        fold=fold,
+    )
+
+    X_train = X[validation_indices == False]
+    y_train = y[validation_indices == False]
+
+    X_val = X[validation_indices == True]
+    y_val = y[validation_indices == True]
+
+    return X_train, y_train, X_val, y_val
+
+def get_fixed_validation_indices(labels, limit_per_class=2, offset=0):
     unique_labels = np.unique(labels)
     validation_indices = []
     
     for label in unique_labels:
         label_indices = np.argwhere(labels == label).flatten()
         label_validation_indices = np.roll(label_indices, -offset)[0:limit_per_class]
+        validation_indices = validation_indices + label_validation_indices.tolist()
+    
+    is_validation = np.full(len(labels), False)
+    is_validation[validation_indices] = True
+        
+    return is_validation
+
+def get_balanced_validation_indices(labels, total_folds=5, fold=0):
+    unique_labels = np.unique(labels)
+    validation_indices = []
+    
+    for label in unique_labels:
+        label_indices = np.argwhere(labels == label).flatten()
+        samples_in_class = len(label_indices)
+        validation_samples = math.ceil(samples_in_class/total_folds)
+        offset = validation_samples * fold
+        label_validation_indices = np.roll(label_indices, -offset)[0:validation_samples]
         validation_indices = validation_indices + label_validation_indices.tolist()
     
     is_validation = np.full(len(labels), False)
@@ -40,9 +73,13 @@ def k_fold_classification_cost(config):
     else:
         classifier_options = None
     
-    folds = config['cross_validation_folds']
-    val_size_per_class = config['cross_validation_val_size_per_class']
+    total_folds = config['cross_validation_folds']
 
+    if 'cross_validation_val_size_per_class' in config:
+        val_size_per_class = config['cross_validation_val_size_per_class']
+    else:
+        val_size_per_class = None
+    
     result = extract_training_features(config)
     features = result['features']
     labels = result['labels']
@@ -50,13 +87,21 @@ def k_fold_classification_cost(config):
     total_errors = 0
     total_predictions = 0
     
-    for offset in np.arange(0, folds):
-        X_train, y_train, X_val, y_val = train_val_split(
-            X=features,
-            y=labels,
-            val_size_per_class=val_size_per_class,
-            offset=offset,
-        )
+    for fold in np.arange(0, total_folds):
+        if val_size_per_class is not None:
+            X_train, y_train, X_val, y_val = fixed_train_val_split(
+                X=features,
+                y=labels,
+                val_size_per_class=val_size_per_class,
+                offset=fold,
+            )
+        else:
+            X_train, y_train, X_val, y_val = balanced_train_val_split(
+                X=features,
+                y=labels,
+                total_folds=total_folds,
+                fold=fold,
+            )
     
         model = build_classifier(classifier_name, classifier_options)
         fit(model, X_train, y_train)
