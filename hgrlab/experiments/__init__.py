@@ -7,6 +7,8 @@ def run_experiments(
     assets_dir,
     classifier_names,
     user_ids,
+    folds=4,
+    val_size_per_class=None,
     setup=None,
 ):
     start_ts = datetime.datetime.now()
@@ -26,6 +28,8 @@ def run_experiments(
             assets_dir=assets_dir,
             classifier_names=classifier_names,
             user_ids=user_ids,
+            folds=folds,
+            val_size_per_class=val_size_per_class,
         )
 
     end_ts = datetime.datetime.now()

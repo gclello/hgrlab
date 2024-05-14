@@ -43,15 +43,14 @@ def find_optimum_segmentation_thresholds_by_classifier_and_user(
     assets_dir,
     classifier_names,
     user_ids,
+    folds=4,
+    val_size_per_class=2,
     threshold_min=10,
     threshold_max=20,
 ):
     start_ts = datetime.datetime.now()
 
     task = 'Optimizing thresholds'
-
-    folds = 4
-    val_size_per_class = 2
 
     print_message(
         'Experiment %d of %d: Optimize HGR segmentation thresholds using %d-fold cross-validation' % (
@@ -234,6 +233,8 @@ def assess_hgr_systems_by_classifier_and_user(
     assets_dir,
     classifier_names,
     user_ids,
+    folds=None,
+    val_size_per_class=None,
     experiment_runs=100,
 ):
     start_ts = datetime.datetime.now()
