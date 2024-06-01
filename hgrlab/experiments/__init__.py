@@ -7,7 +7,7 @@ def run_experiments(
     assets_dir,
     classifier_names,
     user_ids,
-    folds=4,
+    folds,
     val_size_per_class=None,
     setup=None,
 ):

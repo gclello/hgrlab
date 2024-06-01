@@ -43,8 +43,8 @@ def find_optimum_segmentation_thresholds_by_classifier_and_user(
     assets_dir,
     classifier_names,
     user_ids,
-    folds=4,
-    val_size_per_class=2,
+    folds,
+    val_size_per_class,
     threshold_min=10,
     threshold_max=20,
 ):
@@ -233,8 +233,8 @@ def assess_hgr_systems_by_classifier_and_user(
     assets_dir,
     classifier_names,
     user_ids,
-    folds=None,
-    val_size_per_class=None,
+    folds,
+    val_size_per_class,
     experiment_runs=100,
 ):
     start_ts = datetime.datetime.now()
@@ -523,6 +523,9 @@ def main():
 
     user_ids = np.arange(1, 11)
 
+    folds = 4
+    val_size_per_class = 2
+
     experiments = [
         find_optimum_segmentation_thresholds_by_classifier_and_user,
         assess_hgr_systems_by_classifier_and_user,
@@ -535,6 +538,9 @@ def main():
         assets_dir=AssetManager.get_base_dir(),
         classifier_names=classifiers_names,
         user_ids=user_ids,
+        folds=folds,
+        val_size_per_class=val_size_per_class,
+
     )
 
 if __name__ == '__main__':
