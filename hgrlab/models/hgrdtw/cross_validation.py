@@ -1,7 +1,7 @@
 import math
 import numpy as np
 
-from .feature_extraction import extract_training_features
+from .feature_set import FeatureSet
 from .classification import build_classifier, fit, predict
 
 def fixed_train_val_split(X, y, val_size_per_class, offset=0):
@@ -65,7 +65,7 @@ def get_balanced_validation_indices(labels, total_folds=5, fold=0):
         
     return is_validation
 
-def k_fold_classification_cost(config):
+def k_fold_cost(config):
     classifier_name = config['classifier_name']
     
     if 'classifier_options' in config:
@@ -80,9 +80,9 @@ def k_fold_classification_cost(config):
     else:
         val_size_per_class = None
     
-    result = extract_training_features(config)
-    features = result['features']
-    labels = result['labels']
+    fs = FeatureSet.build_and_extract(config['feature_set_config'])
+    features = fs.get_data('dtw')
+    labels = fs.get_data('labels')
     
     total_errors = 0
     total_predictions = 0

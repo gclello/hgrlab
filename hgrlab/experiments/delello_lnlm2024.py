@@ -5,12 +5,12 @@ import multiprocessing as mp
 import concurrent.futures
 import datetime
 
-from ..models.hgrdtw import k_fold_classification_cost
+from ..models.hgrdtw import k_fold_cost
 from ..models.hgrdtw import build_classifier, fit, predict
 from ..utils import load_pickle
 from ..utils import AssetManager
 
-from ..experiments import run_experiments, print_message, print_title, print_progress, print_result, print_line_break
+from ..experiments import run_experiments, print_message, print_progress, print_result, print_line_break
 
 def find_optimum_segmentation_threshold(config):
     threshold_min = config['threshold_min']
@@ -26,9 +26,9 @@ def find_optimum_segmentation_threshold(config):
     thresholds_errors = np.full(np.size(thresholds), HUGE_ERROR)
 
     for threshold_id, threshold in enumerate(thresholds):
-        config['activity_threshold'] = threshold
+        config['feature_set_config']['activity_threshold'] = threshold
 
-        errors, predictions = k_fold_classification_cost(config)
+        errors, _ = k_fold_cost(config)
 
         thresholds_errors[threshold_id] = errors
 
@@ -40,6 +40,7 @@ def find_optimum_segmentation_threshold(config):
 def find_optimum_segmentation_thresholds_by_classifier_and_user(
     experiment_id,
     total_experiments,
+    dataset_name,
     assets_dir,
     classifier_names,
     user_ids,
@@ -85,20 +86,24 @@ def find_optimum_segmentation_thresholds_by_classifier_and_user(
 
         for user_id in user_ids:
             config = {
-                'database_path': assets_dir,
-                'database_type': 'training',
                 'classifier_name': classifier_name,
-                'user_id': user_id,
                 'threshold_min': threshold_min,
                 'threshold_max': threshold_max,
                 'threshold_direction': 'desc',
                 'cross_validation_folds': folds,
                 'cross_validation_val_size_per_class': val_size_per_class,
-                'stft_window_length': 25,
-                'stft_window_overlap': 10,
-                'stft_nfft': 50,
-                'activity_extra_samples': 25,
-                'activity_min_length': 100,
+                'feature_set_config': {
+                    'user_id': user_id,
+                    'ds_name': dataset_name,
+                    'ds_type': 'training',
+                    'ds_dir': assets_dir,
+                    'fs_dir': os.path.join(assets_dir, 'feature_set'),
+                    'stft_window_length': 25,
+                    'stft_window_overlap': 10,
+                    'stft_nfft': 50,
+                    'activity_extra_samples': 25,
+                    'activity_min_length': 100,
+                },
             }
             
             user_configs.append(config)
@@ -208,12 +213,12 @@ def assess_hand_gesture_classification(config):
 
     for experiment in np.arange(0, experiments):
         model = build_classifier(classifier_name)
-        model.fit(X_train, y_train)
+        fit(model, X_train, y_train)
 
         prediction = np.full((test_trials,), 'relax', dtype='U14')
         
         for trial_id, X_test_windows in enumerate(X_test):
-            test_window_predictions = model.predict(X_test_windows)
+            test_window_predictions = predict(model, X_test_windows)
 
             prediction[trial_id] = reduce_window_predictions(
                 test_window_predictions,
@@ -230,6 +235,7 @@ def assess_hand_gesture_classification(config):
 def assess_hgr_systems_by_classifier_and_user(
     experiment_id,
     total_experiments,
+    dataset_name,
     assets_dir,
     classifier_names,
     user_ids,
@@ -512,6 +518,7 @@ def download_assets():
 def main():
     authors = 'Guilherme C. De Lello, Gabriel S. Chaves, Juliano F. Caldeira, and Markus V.S. Lima'
     title = 'HGR experiments conducted by %s on March 2024' % authors
+    dataset_name = 'emgepn30'
 
     classifiers_names = [
         'svm',
@@ -533,6 +540,7 @@ def main():
 
     run_experiments(
         title,
+        dataset_name,
         setup=download_assets,
         experiments=experiments,
         assets_dir=AssetManager.get_base_dir(),

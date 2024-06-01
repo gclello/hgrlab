@@ -3,6 +3,7 @@ import numpy as np
 
 def run_experiments(
     title,
+    dataset_name,
     experiments,
     assets_dir,
     classifier_names,
@@ -25,6 +26,7 @@ def run_experiments(
         experiment(
             experiment_id=i+1,
             total_experiments=np.size(experiments),
+            dataset_name=dataset_name,
             assets_dir=assets_dir,
             classifier_names=classifier_names,
             user_ids=user_ids,
