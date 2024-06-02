@@ -5,7 +5,7 @@ import multiprocessing as mp
 import concurrent.futures
 import datetime
 
-from ..models.hgrdtw import k_fold_cost
+from ..models.hgrdtw import k_fold_cost, FeatureSet
 from ..models.hgrdtw import build_classifier, fit, predict
 from ..utils import load_pickle
 from ..utils import AssetManager
@@ -97,7 +97,7 @@ def find_optimum_segmentation_thresholds_by_classifier_and_user(
                     'ds_name': dataset_name,
                     'ds_type': 'training',
                     'ds_dir': assets_dir,
-                    'fs_dir': os.path.join(assets_dir, 'feature_set'),
+                    'fs_dir': assets_dir,
                     'stft_window_length': 25,
                     'stft_window_overlap': 10,
                     'stft_nfft': 50,
@@ -191,19 +191,18 @@ def reduce_window_predictions(
 
 def assess_hand_gesture_classification(config):
     experiments = config['experiments']
-    user_id = config['user_id']
     classifier_name = config['classifier_name']
-    training_file = config['training_file']
-    test_file = config['test_file']
 
-    training_data = load_pickle(training_file)
-    test_data = load_pickle(test_file)
+    config['feature_set_config']['ds_type'] = 'training'
+    fs_training = FeatureSet.build_and_extract(config['feature_set_config'])
+    X_train = fs_training.get_data('dtw')
+    y_train = fs_training.get_data('labels')
 
-    X_train = training_data[user_id]['features']
-    y_train = training_data[user_id]['labels']
-    X_test = test_data[user_id]['features']
-    y_test = test_data[user_id]['labels']
-    test_activity_indices = test_data[user_id]['activity_indexes']
+    config['feature_set_config']['ds_type'] = 'test'
+    fs_test = FeatureSet.build_and_extract(config['feature_set_config'])
+    X_test = fs_test.get_data('dtw')
+    y_test = fs_test.get_data('labels')
+    test_activity_indices = fs_test.get_data('predicted_indices')
 
     test_trials = X_test.shape[0]
     test_window_length = X_test.shape[2]
@@ -251,6 +250,14 @@ def assess_hgr_systems_by_classifier_and_user(
     number_of_users = np.size(user_ids)
     number_of_classifiers = np.size(classifier_names)
 
+    thresholds = {
+        'svm': [19, 20, 12, 19, 19, 19, 19, 19, 19, 19],
+         'lr': [19, 20, 19, 19, 19, 19, 19, 19, 19, 19],
+        'lda': [19, 20, 15, 19, 17, 16, 19, 19, 19, 19],
+        'knn': [19, 20, 19, 19, 14, 16, 19, 19, 19, 19],
+         'dt': [18, 18, 20, 16, 11, 18, 14, 19, 19, 20],
+    }
+
     errors = np.zeros(
         (number_of_classifiers,number_of_users,experiment_runs,),
         dtype=np.uint32
@@ -285,23 +292,23 @@ def assess_hgr_systems_by_classifier_and_user(
 
         user_configs = []
 
-        training_file = os.path.join(
-            assets_dir,
-            'training_features_%s.pickle' % classifier_name,
-        )
-
-        test_file = os.path.join(
-            assets_dir,
-            'test_features_m500_s10_%s.pickle' % classifier_name,
-        )
-
         for user_id in user_ids:
+            optimum_threshold = thresholds[classifier_name][user_id-1]
             config = {
-                'training_file': training_file,
-                'test_file': test_file,
                 'classifier_name': classifier_name,
-                'user_id': user_id,
                 'experiments': experiment_runs,
+                'feature_set_config': {
+                    'user_id': user_id,
+                    'ds_name': dataset_name,
+                    'ds_dir': assets_dir,
+                    'fs_dir': assets_dir,
+                    'stft_window_length': 25,
+                    'stft_window_overlap': 10,
+                    'stft_nfft': 50,
+                    'activity_threshold': optimum_threshold,
+                    'activity_extra_samples': 25,
+                    'activity_min_length': 100,
+                },
             }
             
             user_configs.append(config)
@@ -396,83 +403,227 @@ def download_assets():
     assets = {
         'subject1_training': {
             'remote_id': '1-F1p0N5x2C3fey9GupDYlmHob0l_ZIMg',
-            'filename': 'subject1_training.h5'
+            'filename': 'subject1_training.h5',
         },
         'subject2_training': {
             'remote_id': '1-Gjn9KKoFTVH7_O-9L4wOyl2UzX3mIj6',
-            'filename': 'subject2_training.h5'
+            'filename': 'subject2_training.h5',
         },
         'subject3_training': {
             'remote_id': '1-r5A0aL4hI9rMsLLGO5O5rgjriTrLMUM',
-            'filename': 'subject3_training.h5'
+            'filename': 'subject3_training.h5',
         },
         'subject4_training': {
             'remote_id': '1-8BmKmR4FTVLc8cggZkouCO7BIRHqFuK',
-            'filename': 'subject4_training.h5'
+            'filename': 'subject4_training.h5',
         },
         'subject5_training': {
             'remote_id': '1-f0m6uqj3AFMbzA5769TBaEFZDfh6WGa',
-            'filename': 'subject5_training.h5'
+            'filename': 'subject5_training.h5',
         },
         'subject6_training': {
             'remote_id': '10BF3MuHphVVq1Mpn-YJ13--VvyQR5HuF',
-            'filename': 'subject6_training.h5'
+            'filename': 'subject6_training.h5',
         },
         'subject7_training': {
             'remote_id': '1--vbiMvJL9pvUXOmAr9efVM9iPq-UYog',
-            'filename': 'subject7_training.h5'
+            'filename': 'subject7_training.h5',
         },
         'subject8_training': {
             'remote_id': '1-tQbeFzUFqkoun5yXWBvtgYrRycPzuTd',
-            'filename': 'subject8_training.h5'
+            'filename': 'subject8_training.h5',
         },
         'subject9_training': {
             'remote_id': '103OiJYh-b6gWv5Yew3JTwFo2S7LgbmE7',
-            'filename': 'subject9_training.h5'
+            'filename': 'subject9_training.h5',
         },
         'subject10_training': {
             'remote_id': '1-3aMg8xDAVBknSLWnNbNtX8dHiNjZofe',
-            'filename': 'subject10_training.h5'
+            'filename': 'subject10_training.h5',
         },
-        'training_features_svm': {
-            'remote_id': '10UBEz8HBpkAwKRF6xlgG_K7LGCFM7qlW',
-            'filename': 'training_features_svm.pickle'
+        'subject1_training_features_1': {
+            'remote_id': '1sRQGX5HBw9EYEQNegsQ8VC4-esr4-IvI',
+            'filename': 'emgepn30_features_subject1_training_c70a240860eaa439ee89879591f1a805.h5',
         },
-        'test_features_svm': {
-            'remote_id': '13pfALxZ8u_dzi_b7c2RBmlQeNXLBRgVt',
-            'filename': 'test_features_m500_s10_svm.pickle'
+        'subject1_training_features_2': {
+            'remote_id': '1rv-QwRJAHghzyLYotvQoxPjnfIcDKZRa',
+            'filename': 'emgepn30_features_subject1_training_f760c173838449ae3fd3064ffaa26dde.h5',
         },
-        'training_features_lr': {
-            'remote_id': '1a1wgDWTYZsvAfhs-Ltu-6wTOo4kGvTiL',
-            'filename': 'training_features_lr.pickle'
+        'subject1_test_features_1': {
+            'remote_id': '1rLtTvjUC-Ms6HqZJsstIQOB3ZR4hcoi8',
+            'filename': 'emgepn30_features_subject1_test_1b57d5b091d4ad3a12ef5ecd749dc5e7.h5',
         },
-        'test_features_lr': {
-            'remote_id': '1j4J3Yub1ksg6Y1hc9nggdKgIHuaIN300',
-            'filename': 'test_features_m500_s10_lr.pickle'
+        'subject1_test_features_2': {
+            'remote_id': '1rtASIrqwxy9vqmuEWBbJRCor3tPYUWKl',
+            'filename': 'emgepn30_features_subject1_test_275faa72d1fde5ff75d575839e2fc4b4.h5',
         },
-        'training_features_lda': {
-            'remote_id': '1hKesrsPOf0_kCO0lhhEjJhipIupDXFqe',
-            'filename': 'training_features_lda.pickle'
+        'subject2_training_features_1': {
+            'remote_id': '1s5ZWcDBXkAr75bAtIJrgPJCPIqJ227ZK',
+            'filename': 'emgepn30_features_subject2_training_a90fa8ad42553f0a9da9e32d681d8b7a.h5',
         },
-        'test_features_lda': {
-            'remote_id': '1u9b29jWvO0ZNFv-LeHj-aH5GtP5fcmFv',
-            'filename': 'test_features_m500_s10_lda.pickle'
+        'subject2_training_features_2': {
+            'remote_id': '1s43oOLqMmr2mc-dB_HpEwSo1WynD18HF',
+            'filename': 'emgepn30_features_subject2_training_ba453b0dfe791658ed73d02023f35e7c.h5',
         },
-        'training_features_knn': {
-            'remote_id': '1n2hwI-9voM8ImDBTZ1hPcXd1PaMaJjAw',
-            'filename': 'training_features_knn.pickle'
+        'subject2_test_features_1': {
+            'remote_id': '1rDxrwPqV8JrGkAGThfSPMW4F3S5lerWF',
+            'filename': 'emgepn30_features_subject2_test_bc6ff8cbac25292050958fd345ef3fa8.h5',
         },
-        'test_features_knn': {
-            'remote_id': '1ghknJcGayi1EOEUvFNx1jbHUz5XYzvuW',
-            'filename': 'test_features_m500_s10_knn.pickle'
+        'subject2_test_features_2': {
+            'remote_id': '1sXdhyWOUNqtbXgX6_Dw4XaaGRhbQ6kRW',
+            'filename': 'emgepn30_features_subject2_test_c450226bdfd56d2a447763c8b143e32e.h5',
         },
-        'training_features_dt': {
-            'remote_id': '1582s-IC2ThcACjJ7WdcuNODyd_0UwTsG',
-            'filename': 'training_features_dt.pickle'
+        'subject3_training_features_1': {
+            'remote_id': '1scHskfjYMJfQ5dSsAzTgRCYiTKKB-zG7',
+            'filename': 'emgepn30_features_subject3_training_85f701c869ddd67af245756deab5718c.h5',
         },
-        'test_features_dt': {
-            'remote_id': '12PbHAr_Jo_u-HUibMj2lDCMalta9gZvU',
-            'filename': 'test_features_m500_s10_dt.pickle'
+        'subject3_training_features_2': {
+            'remote_id': '1s8WrZlgvU5wLTW7p-OYLM-V2SQVO0Rqn',
+            'filename': 'emgepn30_features_subject3_training_314386d5df64506dbbab02a2a7daf16b.h5',
+        },
+        'subject3_training_features_3': {
+            'remote_id': '1rD3fTk_FlkTdQh1vduH_nXGmEd1UkpuZ',
+            'filename': 'emgepn30_features_subject3_training_ccbd6d8e2fa8fcabec8775f67f9a31c1.h5',
+        },
+        'subject3_training_features_4': {
+            'remote_id': '1tksna3pdQ_z4wA7emzWvRahkoy5n453m',
+            'filename': 'emgepn30_features_subject3_training_f24445402a606778033efdab257bf584.h5',
+        },
+        'subject3_test_features_1': {
+            'remote_id': '1sPIk5jzGWuop7F6tBMW2a94mMoeapZB7',
+            'filename': 'emgepn30_features_subject3_test_622e160136988940243023c1c2eca08e.h5',
+        },
+        'subject3_test_features_2': {
+            'remote_id': '1rObfE33ZvrojGMGyLd4EdTH8ykLltYys',
+            'filename': 'emgepn30_features_subject3_test_7602c145973b875375978741675d200f.h5',
+        },
+        'subject3_test_features_3': {
+            'remote_id': '1rWPPYvIxR0_RBacS8buw-EIt8N3VyyfE',
+            'filename': 'emgepn30_features_subject3_test_bdced377ed1b9119ede3ac699b24c7d5.h5',
+        },
+        'subject3_test_features_4': {
+            'remote_id': '1rtUwTRMUz1X7L_cUotdAJq6IkCgUyQX6',
+            'filename': 'emgepn30_features_subject3_test_d6a49b2e85d2f09ca6d215806a985432.h5',
+        },
+        'subject4_training_features_1': {
+            'remote_id': '1rb3tq0tqvsLBjgtHWr9cg2b8bx9xR0yz',
+            'filename': 'emgepn30_features_subject4_training_52d27fc0af49f18de6b06147f8772150.h5',
+        },
+        'subject4_training_features_2': {
+            'remote_id': '1sch1Xqe7Emxp8nsazyZg4QvKzAJKglJV',
+            'filename': 'emgepn30_features_subject4_training_c591ad1c2f363bf8972590e99d96bdf6.h5',
+        },
+        'subject4_test_features_1': {
+            'remote_id': '1tVkftGuh6oTFBMS8G-QJ7aA8mqJh0QTQ',
+            'filename': 'emgepn30_features_subject4_test_9f6c2bc1afc7c34f90e412976c1299d1.h5',
+        },
+        'subject4_test_features_2': {
+            'remote_id': '1sKiuZSxynHbD5lQJT3R2-XEMoazhkFTk',
+            'filename': 'emgepn30_features_subject4_test_dc5126d46ccf581299e73d9286364873.h5',
+        },
+        'subject5_training_features_1': {
+            'remote_id': '1sMIAre59vXC7POsole5siS4HNtRxbi3B',
+            'filename': 'emgepn30_features_subject5_training_1ca3ababfeb4aaa5f0a2b63372c5f82e.h5',
+        },
+        'subject5_training_features_2': {
+            'remote_id': '1sLnST_mIjKVSEg3qTIqUn0y628HjmlmC',
+            'filename': 'emgepn30_features_subject5_training_8d8fd967dd9e2cb3f06226ae7e2e0e33.h5',
+        },
+        'subject5_training_features_3': {
+            'remote_id': '1tmh86TTMIwCbWDgNhEqnz1Own9wKdU5k',
+            'filename': 'emgepn30_features_subject5_training_ad43439390e765979bb9c41f97ef471f.h5',
+        },
+        'subject5_training_features_4': {
+            'remote_id': '1t3kHqx_SIOaVRlkb8mfbZOdwaSFODl1L',
+            'filename': 'emgepn30_features_subject5_training_df95df2b1fe44743f55f6420513d4642.h5',
+        },
+        'subject5_test_features_1': {
+            'remote_id': '1rvq3st8Qm_AtleCF9HuCm31LUso79axh',
+            'filename': 'emgepn30_features_subject5_test_052ead8353b5136d5b4b1ae407437ee4.h5',
+        },
+        'subject5_test_features_2': {
+            'remote_id': '1t2EqKbequhVMXkgrPv2X-SF6IuS1jFcr',
+            'filename': 'emgepn30_features_subject5_test_96157d0333c8b5523942efd86d1627ef.h5',
+        },
+        'subject5_test_features_3': {
+            'remote_id': '1rF6afXyn-eRWer1LiH00krg0o1Soj2EO',
+            'filename': 'emgepn30_features_subject5_test_b11c9c2bed8ec31d7cbf9e76436466f5.h5',
+        },
+        'subject5_test_features_4': {
+            'remote_id': '1sz0bk1ueV9SzRh9CD7nYNilNwLKBHuAS',
+            'filename': 'emgepn30_features_subject5_test_d75f0326c7b26ee2cc9bcb97694373e7.h5',
+        },
+        'subject6_training_features_1': {
+            'remote_id': '1tV2Nu0o1Nb4YwYAfdSGei77k6iKt1zXN',
+            'filename': 'emgepn30_features_subject6_training_a6c50f98e52bed02e55ea92e0e8d1fd5.h5',
+        },
+        'subject6_training_features_2': {
+            'remote_id': '1surlImDA2QwpHwkZtuCmQPw-HbwlD3Py',
+            'filename': 'emgepn30_features_subject6_training_abbf731d2e6aaa4c07ecb97cab4dc41e.h5',
+        },
+        'subject6_training_features_3': {
+            'remote_id': '1tYUc-53slOYbuFyhvvjyCdAkMXcSh7ZU',
+            'filename': 'emgepn30_features_subject6_training_f3e607e8681b22d64fe0b0fa62c57e3f.h5',
+        },
+        'subject6_test_features_1': {
+            'remote_id': '1sJFQiEJ4mK7L5XJlO2UkRGBu0eC6B6D-',
+            'filename': 'emgepn30_features_subject6_test_7da80703509bc75a0dd01d811427d9c2.h5',
+        },
+        'subject6_test_features_2': {
+            'remote_id': '1rEqgCLf6aev-XNLfz9RCkAxB2TDPmns4',
+            'filename': 'emgepn30_features_subject6_test_69d0e5db3aa966f6b368db5ade9d4774.h5',
+        },
+        'subject6_test_features_3': {
+            'remote_id': '1s0286jq8AgP-_IwHRcKJdJtFZOC_nYdL',
+            'filename': 'emgepn30_features_subject6_test_4304c3177801b2c6f288a2e92f90c2aa.h5',
+        },
+        'subject7_training_features_1': {
+            'remote_id': '1reOu_YUwDeDSQPPlm5w7zSPs3fQtDcrm',
+            'filename': 'emgepn30_features_subject7_training_4fa7730b46075e22fc4fbd34741a23ee.h5',
+        },
+        'subject7_training_features_2': {
+            'remote_id': '1s1YaDw025m_exuNTjMEm2uqdDkC8XRwC',
+            'filename': 'emgepn30_features_subject7_training_a8dcf402fd3895039204cf3971a7c9f6.h5',
+        },
+        'subject7_test_features_1': {
+            'remote_id': '1ro0uJ0xObPdbJjnBSMANtTPKJyzXtbgp',
+            'filename': 'emgepn30_features_subject7_test_51dd2cd2ba70dcc68288bbce53f56670.h5',
+        },
+        'subject7_test_features_2': {
+            'remote_id': '1sI395UW55qEQiEz1KvGVPCa8DLzIR7RI',
+            'filename': 'emgepn30_features_subject7_test_d1bcff6dca1f9f4753da18961ce384a3.h5',
+        },
+        'subject8_training_features_1': {
+            'remote_id': '1rLxW3ZTxmEpXFJY_CyE_cxSBlbC5i7xC',
+            'filename': 'emgepn30_features_subject8_training_f54e703f1591852eb0c78a1baf19d016.h5',
+        },
+        'subject8_test_features_1': {
+            'remote_id': '1tsizP4gw0upYnKqOmX0-eiYN3Mmigl74',
+            'filename': 'emgepn30_features_subject8_test_78c926c1455722501ad0bc662a2cff11.h5',
+        },
+        'subject9_training_features_1': {
+            'remote_id': '1tkVk_XNE9-HMksKwtRYYjdxByJWAdS3P',
+            'filename': 'emgepn30_features_subject9_training_9fe60691b1dbe636bc61183766cd3a9b.h5',
+        },
+        'subject9_test_features_1': {
+            'remote_id': '1roMDn9gHZbhzBWhvPdIwlrdqDunjiZqd',
+            'filename': 'emgepn30_features_subject9_test_b627bacddbdd8ce47b7a289fa05b2a03.h5',
+        },
+        'subject10_training_features_1': {
+            'remote_id': '1tIBuL6baOZDarB-bfFAq-Y_39xsoEk9n',
+            'filename': 'emgepn30_features_subject10_training_9f4f3a9f6a92605afdbe7aa7e8c33582.h5',
+        },
+        'subject10_training_features_2': {
+            'remote_id': '1t7hooEKGq07YcLH-aDubvR0a0rjVCya5',
+            'filename': 'emgepn30_features_subject10_training_bbf98a717ea80a7e0e21a1e5b52454fd.h5',
+        },
+        'subject10_test_features_1': {
+            'remote_id': '1sJHSYMa3zW4Eao9tbWbI2tlWSCIX0aZj',
+            'filename': 'emgepn30_features_subject10_test_55fb5ad833c5dab92e8436482a6460bb.h5',
+        },
+        'subject10_test_features_2': {
+            'remote_id': '1tcipgt0GXLWDyTfveeO40VzCqc9mZuhC',
+            'filename': 'emgepn30_features_subject10_test_637970283bcf00faf5b7c17542794b4d.h5',
         },
     }
 
