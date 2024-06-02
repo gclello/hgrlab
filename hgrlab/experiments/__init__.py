@@ -6,10 +6,8 @@ def run_experiments(
     dataset_name,
     experiments,
     assets_dir,
-    classifier_names,
     user_ids,
-    folds,
-    val_size_per_class=None,
+    options={},
     setup=None,
 ):
     start_ts = datetime.datetime.now()
@@ -28,10 +26,8 @@ def run_experiments(
             total_experiments=np.size(experiments),
             dataset_name=dataset_name,
             assets_dir=assets_dir,
-            classifier_names=classifier_names,
             user_ids=user_ids,
-            folds=folds,
-            val_size_per_class=val_size_per_class,
+            options=options,
         )
 
     end_ts = datetime.datetime.now()

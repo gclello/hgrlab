@@ -42,14 +42,16 @@ def find_optimum_segmentation_thresholds_by_classifier_and_user(
     total_experiments,
     dataset_name,
     assets_dir,
-    classifier_names,
     user_ids,
-    folds,
-    val_size_per_class,
+    options,
     threshold_min=10,
     threshold_max=20,
 ):
     start_ts = datetime.datetime.now()
+
+    classifier_names = options['classifier_names']
+    folds = options['folds']
+    val_size_per_class = options['val_size_per_class']
 
     task = 'Optimizing thresholds'
 
@@ -236,13 +238,13 @@ def assess_hgr_systems_by_classifier_and_user(
     total_experiments,
     dataset_name,
     assets_dir,
-    classifier_names,
     user_ids,
-    folds,
-    val_size_per_class,
+    options,
     experiment_runs=100,
 ):
     start_ts = datetime.datetime.now()
+
+    classifier_names = options['classifier_names']
 
     task = 'Assessing HGR systems'
 
@@ -695,11 +697,12 @@ def main():
         setup=download_assets,
         experiments=experiments,
         assets_dir=AssetManager.get_base_dir(),
-        classifier_names=classifiers_names,
         user_ids=user_ids,
-        folds=folds,
-        val_size_per_class=val_size_per_class,
-
+        options={
+            'folds': folds,
+            'val_size_per_class': val_size_per_class,
+            'classifier_names': classifiers_names,
+        }
     )
 
 if __name__ == '__main__':
