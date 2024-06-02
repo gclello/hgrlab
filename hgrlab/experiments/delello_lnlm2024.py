@@ -245,20 +245,13 @@ def assess_hgr_systems_by_classifier_and_user(
     start_ts = datetime.datetime.now()
 
     classifier_names = options['classifier_names']
+    thresholds = options['thresholds']
 
     task = 'Assessing HGR systems'
 
     max_workers = mp.cpu_count()
     number_of_users = np.size(user_ids)
     number_of_classifiers = np.size(classifier_names)
-
-    thresholds = {
-        'svm': [19, 20, 12, 19, 19, 19, 19, 19, 19, 19],
-         'lr': [19, 20, 19, 19, 19, 19, 19, 19, 19, 19],
-        'lda': [19, 20, 15, 19, 17, 16, 19, 19, 19, 19],
-        'knn': [19, 20, 19, 19, 14, 16, 19, 19, 19, 19],
-         'dt': [18, 18, 20, 16, 11, 18, 14, 19, 19, 20],
-    }
 
     errors = np.zeros(
         (number_of_classifiers,number_of_users,experiment_runs,),
@@ -294,8 +287,8 @@ def assess_hgr_systems_by_classifier_and_user(
 
         user_configs = []
 
-        for user_id in user_ids:
-            optimum_threshold = thresholds[classifier_name][user_id-1]
+        for i, user_id in enumerate(user_ids):
+            optimum_threshold = thresholds[classifier_name][i]
             config = {
                 'classifier_name': classifier_name,
                 'experiments': experiment_runs,
@@ -671,37 +664,34 @@ def download_assets():
 def main():
     authors = 'Guilherme C. De Lello, Gabriel S. Chaves, Juliano F. Caldeira, and Markus V.S. Lima'
     title = 'HGR experiments conducted by %s on March 2024' % authors
-    dataset_name = 'emgepn30'
-
-    classifiers_names = [
-        'svm',
-        'lr',
-        'lda',
-        'knn',
-        'dt',
-    ]
-
-    user_ids = np.arange(1, 11)
-
-    folds = 4
-    val_size_per_class = 2
-
-    experiments = [
-        find_optimum_segmentation_thresholds_by_classifier_and_user,
-        assess_hgr_systems_by_classifier_and_user,
-    ]
 
     run_experiments(
         title,
-        dataset_name,
-        setup=download_assets,
-        experiments=experiments,
+        dataset_name='emgepn30',
         assets_dir=AssetManager.get_base_dir(),
-        user_ids=user_ids,
+        user_ids=np.arange(1, 11),
+        setup=download_assets,
+        experiments=[
+            find_optimum_segmentation_thresholds_by_classifier_and_user,
+            assess_hgr_systems_by_classifier_and_user,
+        ],
         options={
-            'folds': folds,
-            'val_size_per_class': val_size_per_class,
-            'classifier_names': classifiers_names,
+            'folds': 4,
+            'val_size_per_class': 2,
+            'classifier_names': [
+                'svm',
+                'lr',
+                'lda',
+                'knn',
+                'dt',
+            ],
+            'thresholds': {
+                'svm': [19, 20, 12, 19, 19, 19, 19, 19, 19, 19],
+                'lr': [19, 20, 19, 19, 19, 19, 19, 19, 19, 19],
+                'lda': [19, 20, 15, 19, 17, 16, 19, 19, 19, 19],
+                'knn': [19, 20, 19, 19, 14, 16, 19, 19, 19, 19],
+                'dt': [18, 18, 20, 16, 11, 18, 14, 19, 19, 20],
+            }
         }
     )
 
