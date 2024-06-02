@@ -17,6 +17,16 @@ def find_optimum_segmentation_threshold(config):
     threshold_max = config['threshold_max']
     threshold_direction = config['threshold_direction']
 
+    if 'cv_options' in config.keys():
+        cv_options = config['cv_options']
+    else:
+        cv_options = None
+
+    if 'classifier_options' in config.keys():
+        classifier_options = config['classifier_options']
+    else:
+        classifier_options = None
+
     if threshold_direction == 'desc':
         thresholds = np.flip(np.arange(threshold_min, threshold_max+1))
     else:
@@ -28,7 +38,13 @@ def find_optimum_segmentation_threshold(config):
     for threshold_id, threshold in enumerate(thresholds):
         config['feature_set_config']['activity_threshold'] = threshold
 
-        errors, _ = k_fold_cost(config)
+        errors, _ = k_fold_cost(
+            feature_set_config=config['feature_set_config'],
+            folds=config['cv_folds'],
+            classifier_name=config['classifier_name'],
+            cv_options=cv_options,
+            classifier_options=classifier_options,
+        )
 
         thresholds_errors[threshold_id] = errors
 
@@ -50,8 +66,12 @@ def find_optimum_segmentation_thresholds_by_classifier_and_user(
     start_ts = datetime.datetime.now()
 
     classifier_names = options['classifier_names']
-    folds = options['folds']
-    val_size_per_class = options['val_size_per_class']
+    folds = options['cv_folds']
+
+    if 'cv_options' in options.keys():
+        cv_options = options['cv_options']
+    else:
+        cv_options = None
 
     task = 'Optimizing thresholds'
 
@@ -92,8 +112,8 @@ def find_optimum_segmentation_thresholds_by_classifier_and_user(
                 'threshold_min': threshold_min,
                 'threshold_max': threshold_max,
                 'threshold_direction': 'desc',
-                'cross_validation_folds': folds,
-                'cross_validation_val_size_per_class': val_size_per_class,
+                'cv_folds': folds,
+                'cv_options': cv_options,
                 'feature_set_config': {
                     'user_id': user_id,
                     'ds_name': dataset_name,
@@ -676,8 +696,8 @@ def main():
             assess_hgr_systems_by_classifier_and_user,
         ],
         options={
-            'folds': 4,
-            'val_size_per_class': 2,
+            'cv_folds': 4,
+            'cv_options': {'val_size_per_class': 2},
             'classifier_names': [
                 'svm',
                 'lr',

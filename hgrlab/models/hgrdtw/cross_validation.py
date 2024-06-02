@@ -65,29 +65,26 @@ def get_balanced_validation_indices(labels, total_folds=5, fold=0):
         
     return is_validation
 
-def k_fold_cost(config):
-    classifier_name = config['classifier_name']
-    
-    if 'classifier_options' in config:
-        classifier_options = config['classifier_options']
-    else:
-        classifier_options = None
-    
-    total_folds = config['cross_validation_folds']
-
-    if 'cross_validation_val_size_per_class' in config:
-        val_size_per_class = config['cross_validation_val_size_per_class']
+def k_fold_cost(
+    feature_set_config,
+    folds,
+    classifier_name,
+    cv_options=None,
+    classifier_options=None,
+):
+    if cv_options is not None and 'val_size_per_class' in cv_options:
+        val_size_per_class = cv_options['val_size_per_class']
     else:
         val_size_per_class = None
     
-    fs = FeatureSet.build_and_extract(config['feature_set_config'])
+    fs = FeatureSet.build_and_extract(feature_set_config)
     features = fs.get_data('dtw')
     labels = fs.get_data('labels')
     
     total_errors = 0
     total_predictions = 0
     
-    for fold in np.arange(0, total_folds):
+    for fold in np.arange(0, folds):
         if val_size_per_class is not None:
             X_train, y_train, X_val, y_val = fixed_train_val_split(
                 X=features,
@@ -99,7 +96,7 @@ def k_fold_cost(config):
             X_train, y_train, X_val, y_val = balanced_train_val_split(
                 X=features,
                 y=labels,
-                total_folds=total_folds,
+                total_folds=folds,
                 fold=fold,
             )
     
