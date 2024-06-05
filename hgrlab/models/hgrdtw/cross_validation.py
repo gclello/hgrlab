@@ -1,6 +1,8 @@
 import math
 import numpy as np
 
+from sklearn.model_selection import StratifiedKFold
+
 from .feature_set import FeatureSet
 from .classification import build_classifier, fit, predict
 
@@ -19,18 +21,16 @@ def fixed_train_val_split(X, y, val_size_per_class, offset=0):
 
     return X_train, y_train, X_val, y_val
 
-def balanced_train_val_split(X, y, total_folds, fold=0):
-    validation_indices = get_balanced_validation_indices(
-        y,
-        total_folds=total_folds,
-        fold=fold,
-    )
+def balanced_train_val_split(X, y, folds, fold=0, shuffle=None, random_state=None):
+    skf = StratifiedKFold(n_splits=folds, shuffle=shuffle, random_state=random_state)
 
-    X_train = X[validation_indices == False]
-    y_train = y[validation_indices == False]
+    train_indices, val_indices = [(train, test) for (train, test) in skf.split(X, y)][fold]
 
-    X_val = X[validation_indices == True]
-    y_val = y[validation_indices == True]
+    X_train = X[train_indices]
+    y_train = y[train_indices]
+
+    X_val = X[val_indices]
+    y_val = y[val_indices]
 
     return X_train, y_train, X_val, y_val
 
@@ -41,23 +41,6 @@ def get_fixed_validation_indices(labels, limit_per_class=2, offset=0):
     for label in unique_labels:
         label_indices = np.argwhere(labels == label).flatten()
         label_validation_indices = np.roll(label_indices, -offset)[0:limit_per_class]
-        validation_indices = validation_indices + label_validation_indices.tolist()
-    
-    is_validation = np.full(len(labels), False)
-    is_validation[validation_indices] = True
-        
-    return is_validation
-
-def get_balanced_validation_indices(labels, total_folds=5, fold=0):
-    unique_labels = np.unique(labels)
-    validation_indices = []
-    
-    for label in unique_labels:
-        label_indices = np.argwhere(labels == label).flatten()
-        samples_in_class = len(label_indices)
-        validation_samples = math.ceil(samples_in_class/total_folds)
-        offset = validation_samples * fold
-        label_validation_indices = np.roll(label_indices, -offset)[0:validation_samples]
         validation_indices = validation_indices + label_validation_indices.tolist()
     
     is_validation = np.full(len(labels), False)
@@ -76,6 +59,16 @@ def k_fold_cost(
         val_size_per_class = cv_options['val_size_per_class']
     else:
         val_size_per_class = None
+
+    if cv_options is not None and 'shuffle' in cv_options:
+        shuffle = cv_options['shuffle']
+    else:
+        shuffle = False
+
+    if cv_options is not None and 'random_state' in cv_options:
+        random_state = cv_options['random_state']
+    else:
+        random_state = None
     
     fs = FeatureSet.build_and_extract(feature_set_config)
     features = fs.get_data('dtw')
@@ -96,8 +89,10 @@ def k_fold_cost(
             X_train, y_train, X_val, y_val = balanced_train_val_split(
                 X=features,
                 y=labels,
-                total_folds=folds,
+                folds=folds,
                 fold=fold,
+                shuffle=shuffle,
+                random_state=random_state,
             )
     
         model = build_classifier(classifier_name, classifier_options)
