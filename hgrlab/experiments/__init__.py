@@ -19,9 +19,11 @@ def run_experiments(
         print_line_break()
         setup()
 
+    results = []
+
     for i, experiment in enumerate(experiments):
         print_line_break()
-        experiment(
+        result = experiment(
             experiment_id=i+1,
             total_experiments=np.size(experiments),
             dataset_name=dataset_name,
@@ -29,12 +31,15 @@ def run_experiments(
             user_ids=user_ids,
             options=options,
         )
+        results.append(result)
 
     end_ts = datetime.datetime.now()
     print_line_break()
     print_message('Finished all experiments')
     print_message('Total time elapsed: %s' % str(end_ts - start_ts))
     print_line_break()
+
+    return results
 
 def get_formatted_time():
     now = datetime.datetime.now()
