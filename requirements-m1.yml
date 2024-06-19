@@ -18,3 +18,5 @@ dependencies:
     
     - pip:
         - fastdtw
+        - pybind11
+        - wisardpkg
