@@ -16,16 +16,13 @@ class ThermometerSet:
             self.thermometers.append(t)
     
     def encode(self, X):
-        encoded_data = []
-        
         samples = X.shape[0]
         features = X.shape[1]
+
+        encoded_data = np.empty((samples, 0), dtype=np.uint8)
         
-        for i in np.arange(0, samples):
-            encoded_data.append([])
-            
-            for j in np.arange(0, features):
-                encoded_value = self.thermometers[j].encode(X[i][j])
-                encoded_data[i].extend(encoded_value)
+        for i in np.arange(0, features):
+            encoded_feature = self.thermometers[i].encode(X[:,i])
+            encoded_data = np.concatenate([encoded_data, encoded_feature], axis=1)
         
-        return np.array(encoded_data)
+        return encoded_data

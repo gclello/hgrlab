@@ -2,11 +2,23 @@ import numpy as np
 import wisardpkg
 from .thermometer_set import ThermometerSet
 
+import datetime
+
+max_time_quantize = datetime.timedelta()
+max_time_calibrate = datetime.timedelta()
+max_time_fit = datetime.timedelta()
+max_time_predict = datetime.timedelta()
+
 class ThermometerWisard:
+    _default_thermometer_size = 8
+
     def __init__(self, address_size, *args, **kwargs):
         self.thermometer_set = None
 
-        self.thermometer_size = kwargs.get("thermometer_size", 2 ** 8)
+        self.thermometer_size = kwargs.get(
+            "thermometer_size",
+            ThermometerWisard._default_thermometer_size
+        )
         model_as_json = kwargs.get("json", None)
         
         if(model_as_json is not None):
@@ -46,12 +58,14 @@ class ThermometerWisard:
             X,
             size=self.thermometer_size,
         )
-        
+
     def quantize(self, X):
         if(self.thermometer_set is None):
             self.calibrate(X)
-        
-        return self.thermometer_set.encode(X)
+
+        result = self.thermometer_set.encode(X)
+
+        return result
     
     def fit(self, X, y, quantize=True):
         string_labels = y.astype(str)
@@ -68,6 +82,7 @@ class ThermometerWisard:
             input_data = self.quantize(X)
         else:
             input_data = X
-        
+
         prediction = np.array(self.model.classify(input_data))
+        
         return prediction

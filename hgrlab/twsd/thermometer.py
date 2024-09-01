@@ -6,7 +6,7 @@ class Thermometer:
     ]
     
     _default_strategy = "linear"
-    _default_size = 2 ** 8
+    _default_size = 8
     
     def __init__(self, *args, **kwargs):
         self.size = int(kwargs.get("size", Thermometer._default_size))
@@ -29,15 +29,37 @@ class Thermometer:
         self.min = X.min()
         self.max = X.max()
         self.step = (self.max - self.min) / self.size
+
+    @staticmethod
+    def encode_uint_vector(x):
+        encoded_vector = np.empty((len(x), 0), dtype=np.uint8)
     
-    def encode(self, sample):
-        number_of_steps = int((sample - self.min) // self.step)
-        if(number_of_steps > self.size):
-            number_of_steps = self.size
-        if(number_of_steps < 0):
-            number_of_steps = 0
+        while x.any():
+            encoded_byte = np.fliplr(np.unpackbits((1 << x) - 1).reshape(-1,8))
+            encoded_vector = np.concatenate([encoded_vector, encoded_byte], axis=1)
+            x = np.where(x<8, 0, x-8)
         
-        encoded_sample = np.zeros((self.size), dtype=int)
-        encoded_sample[0:number_of_steps] = np.ones(number_of_steps)
+        return encoded_vector
+    
+    @staticmethod
+    def encode_uint_vector_fixed_size(x, size):
+        encoded_vector = np.empty((len(x), 0), dtype=np.uint8)
+        number_of_bytes = np.ceil(size // 8)
+    
+        for i in np.arange(0, number_of_bytes):
+            encoded_byte = np.fliplr(np.unpackbits((1 << x) - 1).reshape(-1,8))
+            encoded_vector = np.concatenate([encoded_vector, encoded_byte], axis=1)
+            if x.any():
+                x = np.where(x<8, 0, x-8)
         
-        return encoded_sample
+        return encoded_vector
+    
+    def encode(self, X):
+        X_steps = (X - self.min) // self.step
+        X_steps[X_steps > self.size] = self.size
+        X_steps[X_steps < 0] = 0
+
+        return Thermometer.encode_uint_vector_fixed_size(
+            X_steps.astype('uint8', copy=False),
+            size=self.size,
+        )

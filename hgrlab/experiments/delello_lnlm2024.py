@@ -7,7 +7,6 @@ import datetime
 
 from ..models.hgrdtw import k_fold_cost, FeatureSet
 from ..models.hgrdtw import build_classifier, fit, predict
-from ..utils import load_pickle
 from ..utils import AssetManager
 
 from ..experiments import run_experiments, print_message, print_progress, print_result, print_line_break
