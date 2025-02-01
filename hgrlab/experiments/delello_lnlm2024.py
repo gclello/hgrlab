@@ -455,14 +455,6 @@ def download_assets():
             'remote_id': '1-3aMg8xDAVBknSLWnNbNtX8dHiNjZofe',
             'filename': 'subject10_training.h5',
         },
-        'subject1_training_features_1': {
-            'remote_id': '1sRQGX5HBw9EYEQNegsQ8VC4-esr4-IvI',
-            'filename': 'emgepn30_features_subject1_training_c70a240860eaa439ee89879591f1a805.h5',
-        },
-        'subject1_training_features_2': {
-            'remote_id': '1rv-QwRJAHghzyLYotvQoxPjnfIcDKZRa',
-            'filename': 'emgepn30_features_subject1_training_f760c173838449ae3fd3064ffaa26dde.h5',
-        },
         'subject1_test_features_1': {
             'remote_id': '1rLtTvjUC-Ms6HqZJsstIQOB3ZR4hcoi8',
             'filename': 'emgepn30_features_subject1_test_1b57d5b091d4ad3a12ef5ecd749dc5e7.h5',
@@ -471,14 +463,6 @@ def download_assets():
             'remote_id': '1rtASIrqwxy9vqmuEWBbJRCor3tPYUWKl',
             'filename': 'emgepn30_features_subject1_test_275faa72d1fde5ff75d575839e2fc4b4.h5',
         },
-        'subject2_training_features_1': {
-            'remote_id': '1s5ZWcDBXkAr75bAtIJrgPJCPIqJ227ZK',
-            'filename': 'emgepn30_features_subject2_training_a90fa8ad42553f0a9da9e32d681d8b7a.h5',
-        },
-        'subject2_training_features_2': {
-            'remote_id': '1s43oOLqMmr2mc-dB_HpEwSo1WynD18HF',
-            'filename': 'emgepn30_features_subject2_training_ba453b0dfe791658ed73d02023f35e7c.h5',
-        },
         'subject2_test_features_1': {
             'remote_id': '1rDxrwPqV8JrGkAGThfSPMW4F3S5lerWF',
             'filename': 'emgepn30_features_subject2_test_bc6ff8cbac25292050958fd345ef3fa8.h5',
@@ -486,22 +470,6 @@ def download_assets():
         'subject2_test_features_2': {
             'remote_id': '1sXdhyWOUNqtbXgX6_Dw4XaaGRhbQ6kRW',
             'filename': 'emgepn30_features_subject2_test_c450226bdfd56d2a447763c8b143e32e.h5',
-        },
-        'subject3_training_features_1': {
-            'remote_id': '1scHskfjYMJfQ5dSsAzTgRCYiTKKB-zG7',
-            'filename': 'emgepn30_features_subject3_training_85f701c869ddd67af245756deab5718c.h5',
-        },
-        'subject3_training_features_2': {
-            'remote_id': '1s8WrZlgvU5wLTW7p-OYLM-V2SQVO0Rqn',
-            'filename': 'emgepn30_features_subject3_training_314386d5df64506dbbab02a2a7daf16b.h5',
-        },
-        'subject3_training_features_3': {
-            'remote_id': '1rD3fTk_FlkTdQh1vduH_nXGmEd1UkpuZ',
-            'filename': 'emgepn30_features_subject3_training_ccbd6d8e2fa8fcabec8775f67f9a31c1.h5',
-        },
-        'subject3_training_features_4': {
-            'remote_id': '1tksna3pdQ_z4wA7emzWvRahkoy5n453m',
-            'filename': 'emgepn30_features_subject3_training_f24445402a606778033efdab257bf584.h5',
         },
         'subject3_test_features_1': {
             'remote_id': '1sPIk5jzGWuop7F6tBMW2a94mMoeapZB7',
@@ -519,14 +487,6 @@ def download_assets():
             'remote_id': '1rtUwTRMUz1X7L_cUotdAJq6IkCgUyQX6',
             'filename': 'emgepn30_features_subject3_test_d6a49b2e85d2f09ca6d215806a985432.h5',
         },
-        'subject4_training_features_1': {
-            'remote_id': '1rb3tq0tqvsLBjgtHWr9cg2b8bx9xR0yz',
-            'filename': 'emgepn30_features_subject4_training_52d27fc0af49f18de6b06147f8772150.h5',
-        },
-        'subject4_training_features_2': {
-            'remote_id': '1sch1Xqe7Emxp8nsazyZg4QvKzAJKglJV',
-            'filename': 'emgepn30_features_subject4_training_c591ad1c2f363bf8972590e99d96bdf6.h5',
-        },
         'subject4_test_features_1': {
             'remote_id': '1tVkftGuh6oTFBMS8G-QJ7aA8mqJh0QTQ',
             'filename': 'emgepn30_features_subject4_test_9f6c2bc1afc7c34f90e412976c1299d1.h5',
@@ -534,22 +494,6 @@ def download_assets():
         'subject4_test_features_2': {
             'remote_id': '1sKiuZSxynHbD5lQJT3R2-XEMoazhkFTk',
             'filename': 'emgepn30_features_subject4_test_dc5126d46ccf581299e73d9286364873.h5',
-        },
-        'subject5_training_features_1': {
-            'remote_id': '1sMIAre59vXC7POsole5siS4HNtRxbi3B',
-            'filename': 'emgepn30_features_subject5_training_1ca3ababfeb4aaa5f0a2b63372c5f82e.h5',
-        },
-        'subject5_training_features_2': {
-            'remote_id': '1sLnST_mIjKVSEg3qTIqUn0y628HjmlmC',
-            'filename': 'emgepn30_features_subject5_training_8d8fd967dd9e2cb3f06226ae7e2e0e33.h5',
-        },
-        'subject5_training_features_3': {
-            'remote_id': '1tmh86TTMIwCbWDgNhEqnz1Own9wKdU5k',
-            'filename': 'emgepn30_features_subject5_training_ad43439390e765979bb9c41f97ef471f.h5',
-        },
-        'subject5_training_features_4': {
-            'remote_id': '1t3kHqx_SIOaVRlkb8mfbZOdwaSFODl1L',
-            'filename': 'emgepn30_features_subject5_training_df95df2b1fe44743f55f6420513d4642.h5',
         },
         'subject5_test_features_1': {
             'remote_id': '1rvq3st8Qm_AtleCF9HuCm31LUso79axh',
@@ -567,18 +511,6 @@ def download_assets():
             'remote_id': '1sz0bk1ueV9SzRh9CD7nYNilNwLKBHuAS',
             'filename': 'emgepn30_features_subject5_test_d75f0326c7b26ee2cc9bcb97694373e7.h5',
         },
-        'subject6_training_features_1': {
-            'remote_id': '1tV2Nu0o1Nb4YwYAfdSGei77k6iKt1zXN',
-            'filename': 'emgepn30_features_subject6_training_a6c50f98e52bed02e55ea92e0e8d1fd5.h5',
-        },
-        'subject6_training_features_2': {
-            'remote_id': '1surlImDA2QwpHwkZtuCmQPw-HbwlD3Py',
-            'filename': 'emgepn30_features_subject6_training_abbf731d2e6aaa4c07ecb97cab4dc41e.h5',
-        },
-        'subject6_training_features_3': {
-            'remote_id': '1tYUc-53slOYbuFyhvvjyCdAkMXcSh7ZU',
-            'filename': 'emgepn30_features_subject6_training_f3e607e8681b22d64fe0b0fa62c57e3f.h5',
-        },
         'subject6_test_features_1': {
             'remote_id': '1sJFQiEJ4mK7L5XJlO2UkRGBu0eC6B6D-',
             'filename': 'emgepn30_features_subject6_test_7da80703509bc75a0dd01d811427d9c2.h5',
@@ -591,14 +523,6 @@ def download_assets():
             'remote_id': '1s0286jq8AgP-_IwHRcKJdJtFZOC_nYdL',
             'filename': 'emgepn30_features_subject6_test_4304c3177801b2c6f288a2e92f90c2aa.h5',
         },
-        'subject7_training_features_1': {
-            'remote_id': '1reOu_YUwDeDSQPPlm5w7zSPs3fQtDcrm',
-            'filename': 'emgepn30_features_subject7_training_4fa7730b46075e22fc4fbd34741a23ee.h5',
-        },
-        'subject7_training_features_2': {
-            'remote_id': '1s1YaDw025m_exuNTjMEm2uqdDkC8XRwC',
-            'filename': 'emgepn30_features_subject7_training_a8dcf402fd3895039204cf3971a7c9f6.h5',
-        },
         'subject7_test_features_1': {
             'remote_id': '1ro0uJ0xObPdbJjnBSMANtTPKJyzXtbgp',
             'filename': 'emgepn30_features_subject7_test_51dd2cd2ba70dcc68288bbce53f56670.h5',
@@ -607,29 +531,13 @@ def download_assets():
             'remote_id': '1sI395UW55qEQiEz1KvGVPCa8DLzIR7RI',
             'filename': 'emgepn30_features_subject7_test_d1bcff6dca1f9f4753da18961ce384a3.h5',
         },
-        'subject8_training_features_1': {
-            'remote_id': '1rLxW3ZTxmEpXFJY_CyE_cxSBlbC5i7xC',
-            'filename': 'emgepn30_features_subject8_training_f54e703f1591852eb0c78a1baf19d016.h5',
-        },
         'subject8_test_features_1': {
             'remote_id': '1tsizP4gw0upYnKqOmX0-eiYN3Mmigl74',
             'filename': 'emgepn30_features_subject8_test_78c926c1455722501ad0bc662a2cff11.h5',
         },
-        'subject9_training_features_1': {
-            'remote_id': '1tkVk_XNE9-HMksKwtRYYjdxByJWAdS3P',
-            'filename': 'emgepn30_features_subject9_training_9fe60691b1dbe636bc61183766cd3a9b.h5',
-        },
         'subject9_test_features_1': {
             'remote_id': '1roMDn9gHZbhzBWhvPdIwlrdqDunjiZqd',
             'filename': 'emgepn30_features_subject9_test_b627bacddbdd8ce47b7a289fa05b2a03.h5',
-        },
-        'subject10_training_features_1': {
-            'remote_id': '1tIBuL6baOZDarB-bfFAq-Y_39xsoEk9n',
-            'filename': 'emgepn30_features_subject10_training_9f4f3a9f6a92605afdbe7aa7e8c33582.h5',
-        },
-        'subject10_training_features_2': {
-            'remote_id': '1t7hooEKGq07YcLH-aDubvR0a0rjVCya5',
-            'filename': 'emgepn30_features_subject10_training_bbf98a717ea80a7e0e21a1e5b52454fd.h5',
         },
         'subject10_test_features_1': {
             'remote_id': '1sJHSYMa3zW4Eao9tbWbI2tlWSCIX0aZj',
