@@ -4,13 +4,36 @@ import numpy as np
 import scipy
 import scipy.signal
 
-import fastdtw
-
 from ...emgts import EmgTrialSet
 from .segmentation import get_activity_indices
 from .segmentation import get_activity_indices_from_trial_set
 from .segmentation import get_activity_indices_from_trial_set_windows
 from .preprocessing import preprocess
+
+def fastdtw_distance(series1, series2):
+    import fastdtw
+
+    distance, _ = fastdtw.fastdtw(
+        series1,
+        series2,
+        radius=100,
+        dist=2,
+    )
+
+    return distance
+
+def dtai_distance(series1, series2):
+    import dtaidistance
+
+    return dtaidistance.dtw.distance_fast(
+        np.array(series1, dtype=np.double),
+        np.array(series2, dtype=np.double),
+        use_c=True,
+        use_ndim=True,
+    )
+
+def dtw_distance(series1, series2):
+    return fastdtw_distance(series1, series2)
 
 def dtw_from_all_trials(trials, trials_indices):
     '''Compute DTW distances among all trials'''
@@ -21,11 +44,9 @@ def dtw_from_all_trials(trials, trials_indices):
     for i in np.arange(0, trials.shape[0]):
         for j in np.arange(0, trials.shape[0]):
             if j > i:
-                distance, path = fastdtw.fastdtw(
+                distance = dtw_distance(
                     trials[i][trials_indices[i][0]:trials_indices[i][1]],
                     trials[j][trials_indices[j][0]:trials_indices[j][1]],
-                    radius=100,
-                    dist=2
                 )
                 
                 dtw_matrix[i, j] = dtw_matrix[j, i] = distance
@@ -52,11 +73,9 @@ def dtw_from_specific_trial_ids(trials, trials_indices, trial_ids):
     
     for i, trial_data in enumerate(trials):
         for j, trial_id in enumerate(trial_ids):
-            distance, path = fastdtw.fastdtw(
+            distance = dtw_distance(
                 trial_data[trials_indices[i][0]:trials_indices[i][1]],
                 trials[trial_id][trials_indices[trial_id][0]:trials_indices[trial_id][1]],
-                radius=100,
-                dist=2
             )
                   
             dtw_matrix[i, j] = distance
@@ -92,7 +111,7 @@ def dtw_between_two_series(
     
     for i, series1_id in enumerate(series1_ids):
         for j, series2_id in enumerate(series2_ids):
-            distance, path = fastdtw.fastdtw(
+            distance = dtw_distance(
                 series1_preprocess(
                     series1[series1_id][series1_indices[series1_id][0]:series1_indices[series1_id][1]],
                     series1_sampling_rate
@@ -101,8 +120,6 @@ def dtw_between_two_series(
                     series2[series2_id][series2_indices[series2_id][0]:series2_indices[series2_id][1]],
                     series2_sampling_rate,
                 ),
-                radius=100,
-                dist=2,
             )
 
             dtw_matrix[i, j] = distance
