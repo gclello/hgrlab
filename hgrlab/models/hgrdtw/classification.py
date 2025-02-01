@@ -5,6 +5,8 @@ import sklearn.discriminant_analysis
 import sklearn.neighbors
 import sklearn.tree
 
+from ...twsd import ThermometerWisard
+
 def build_classifier(classifier_name, classifier_options={}):
     def merge_options(options1, options2):
         options1 = {} if options1 is None else options1
@@ -12,8 +14,15 @@ def build_classifier(classifier_name, classifier_options={}):
         for option in options2:
             options1[option] = options2[option]
         return options1
-
-    if classifier_name == 'svm':
+    
+    if classifier_name == 'twsd':
+        model = ThermometerWisard(**merge_options({
+            'address_size': 4,
+            'thermometer_size': 8,
+            },
+            classifier_options,
+        ))
+    elif classifier_name == 'svm':
         model = sklearn.svm.SVC(**merge_options({
             'cache_size': 8192,
             'gamma': 'auto',

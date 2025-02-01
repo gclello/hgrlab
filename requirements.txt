@@ -7,3 +7,5 @@ matplotlib==3.7.3
 seaborn==0.13.2
 plotly==5.21.0
 fastdtw==0.3.4
+pybind11==2.12.0
+wisardpkg==1.6.3
