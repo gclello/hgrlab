@@ -83,6 +83,6 @@ class ThermometerWisard:
         else:
             input_data = X
 
-        prediction = np.array(self.model.classify(input_data))
+        prediction = np.array(self.model.classify(input_data), dtype='U14')
         
         return prediction
