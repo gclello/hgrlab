@@ -66,6 +66,9 @@ def find_optimum_segmentation_thresholds_by_classifier_and_user(
     classifier_names = options['classifier_names']
     folds = options['cv_folds']
 
+    feature_window_length = options['feature_window_length']
+    feature_overlap_length = options['feature_overlap_length']
+
     if 'cv_options' in options.keys():
         cv_options = options['cv_options']
     else:
@@ -123,6 +126,8 @@ def find_optimum_segmentation_thresholds_by_classifier_and_user(
                     'stft_nfft': 50,
                     'activity_extra_samples': 25,
                     'activity_min_length': 100,
+                    'feature_window_length': feature_window_length,
+                    'feature_overlap_length': feature_overlap_length,
                 },
             }
             
@@ -259,14 +264,14 @@ def assess_hgr_systems_by_classifier_and_user(
     assets_dir,
     user_ids,
     options,
-    feature_window_length=500,
-    feature_overlap_length=490,
     experiment_runs=100,
 ):
     start_ts = datetime.datetime.now()
 
     classifier_names = options['classifier_names']
     thresholds = options['thresholds']
+    feature_window_length = options['feature_window_length']
+    feature_overlap_length = options['feature_overlap_length']
 
     task = 'Assessing HGR systems'
 
@@ -458,7 +463,9 @@ def main():
                 'lda': [19, 20, 15, 19, 17, 16, 19, 19, 19, 19],
                 'knn': [19, 20, 19, 19, 14, 16, 19, 19, 19, 19],
                 'dt': [18, 18, 20, 16, 11, 18, 14, 19, 19, 20],
-            }
+            },
+            'feature_window_length': 500,
+            'feature_overlap_length': 490,
         }
     )
 
