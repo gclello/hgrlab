@@ -1,3 +1,4 @@
+import os
 import numpy as np
 
 from ..utils import AssetManager
@@ -170,18 +171,21 @@ def main():
     authors = 'Guilherme C. De Lello, Gabriel S. Chaves, Juliano F. Caldeira, and Markus V.S. Lima'
     title = 'HGR experiments conducted by %s on March 2024' % authors
 
+    dataset_name='emgepn10'
+    base_dir = os.path.join(AssetManager.get_base_dir(), dataset_name)
+
     def setup():
         assets = {
             **emgepn10.get_dataset_assets('training'),
             **emgepn10.get_feature_assets('test'),
         }
 
-        download_assets(AssetManager(), assets)
+        download_assets(AssetManager(), assets, base_dir)
 
     run_experiments(
         title,
-        dataset_name='emgepn30',
-        assets_dir=AssetManager.get_base_dir(),
+        dataset_name,
+        assets_dir=base_dir,
         user_ids=np.arange(1, 11),
         setup=setup,
         experiments=[

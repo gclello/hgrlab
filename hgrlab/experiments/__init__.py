@@ -85,7 +85,7 @@ def print_progress(task, progress, status):
         STATUS=status,
     ))
 
-def download_assets(asset_manager, assets):
+def download_assets(asset_manager, assets, dir=None):
     start_ts = datetime.datetime.now()
     
     task = 'Download HGR datasets'
@@ -104,7 +104,7 @@ def download_assets(asset_manager, assets):
             assets[key]['filename'],
         )
 
-        cached = asset_manager.download_asset(key)
+        cached = asset_manager.download_asset(key, dir)
 
         if cached:
             message = 'found file %2d of %2d in local cache (%s)'

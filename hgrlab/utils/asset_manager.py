@@ -29,15 +29,15 @@ class AssetManager:
     def get_base_dir():
         return os.path.join(tempfile.gettempdir(), 'hgrlab')
     
-    def get_asset_path(self, key):
+    def get_asset_path(self, key, dir=None):
         filename = self.remote_assets[key]['filename']
-        base_dir = AssetManager.get_base_dir()
+        base_dir = AssetManager.get_base_dir() if dir is None else dir
         if not os.path.isdir(base_dir):
             os.mkdir(base_dir)
         return os.path.join(base_dir, filename)
     
-    def download_asset(self, key):
-        path = self.get_asset_path(key)
+    def download_asset(self, key, dir=None):
+        path = self.get_asset_path(key, dir)
         url = self.get_asset_url(key)
         cached = False
 
