@@ -31,7 +31,7 @@ def run(
     else:
         cv_options = None
 
-    task = 'Optimizing thresholds'
+    task = 'Optimizing segmentation thresholds'
 
     print_message(
         'Experiment %d of %d: Optimize HGR segmentation thresholds using %d-fold cross-validation' % (

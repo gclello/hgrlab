@@ -19,13 +19,13 @@ def run(
 
     classifier_names = options['classifier_names']
     thresholds = options['thresholds']
-    
+
     feature_window_length = options['feature_window_length']
     feature_overlap_length = options['feature_overlap_length']
 
     dtw_impl = options['dtw_impl']
 
-    task = 'Assessing HGR systems'
+    task = 'Evaluating HGR systems'
 
     max_workers = mp.cpu_count()
     number_of_users = np.size(user_ids)
