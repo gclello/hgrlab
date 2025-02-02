@@ -151,18 +151,16 @@ def find_optimum_segmentation_thresholds_by_classifier_and_user(
 
     end_ts = datetime.datetime.now()
 
-    result_message = '%s\n%s\n' % (
+    output_message = '%s\n%s\n' % (
         'Table 1: Optimum individual segmentation thresholds using 4-fold cross-validation',
         'Lines: classifiers | Columns: subjects'
     )
     for classifier_id, classifier in enumerate(classifier_names):
-        result_message = result_message + '\n%03s: %s' % (
+        output_message = output_message + '\n%03s: %s' % (
             classifier,
             optimum_thresholds[classifier_id],
         )
     
-    print_line_break()
-    print_result(result_message)
     print_line_break()
     print_message('Finished segmentation threshold optimization')
     print_message('Time elapsed in experiment %d of %d: %s' % (
@@ -171,7 +169,10 @@ def find_optimum_segmentation_thresholds_by_classifier_and_user(
         str(end_ts - start_ts),
     ))
 
-    return optimum_thresholds
+    return {
+        'data': optimum_thresholds,
+        'message': output_message,
+    }
 
 def reduce_window_predictions(
     predictions,
@@ -393,11 +394,12 @@ def assess_hgr_systems_by_classifier_and_user(
         'Lines: subjects | Columns: classifiers | Data: mean accuracy and standard deviation (%)',
         table3,
     )
+
+    output_message = '%s\n\n%s' % (
+        accuracy_by_classifier_output,
+        accuracy_by_subject_output
+    )
     
-    print_line_break()
-    print_result(accuracy_by_classifier_output)
-    print_line_break()
-    print_result(accuracy_by_subject_output)
     print_line_break()
     print_message('Finished evaluation of HGR systems')
     print_message('Time elapsed in experiment %d of %d: %s' % (
@@ -405,6 +407,11 @@ def assess_hgr_systems_by_classifier_and_user(
         total_experiments,
         str(end_ts - start_ts),
     ))
+
+    return {
+        'data': accuracy,
+        'message':  output_message,
+    }
 
 def main():
     authors = 'Guilherme C. De Lello, Gabriel S. Chaves, Juliano F. Caldeira, and Markus V.S. Lima'
