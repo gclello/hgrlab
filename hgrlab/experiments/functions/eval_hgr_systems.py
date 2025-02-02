@@ -19,8 +19,11 @@ def run(
 
     classifier_names = options['classifier_names']
     thresholds = options['thresholds']
+    
     feature_window_length = options['feature_window_length']
     feature_overlap_length = options['feature_overlap_length']
+
+    dtw_impl = options['dtw_impl']
 
     task = 'Assessing HGR systems'
 
@@ -80,6 +83,7 @@ def run(
                     'activity_min_length': 100,
                     'feature_window_length': feature_window_length,
                     'feature_overlap_length': feature_overlap_length,
+                    'dtw_impl': dtw_impl,
                 },
             }
             

@@ -207,6 +207,7 @@ def main():
             },
             'feature_window_length': 500,
             'feature_overlap_length': 490,
+            'dtw_impl': 'fastdtw',
         }
     )
 

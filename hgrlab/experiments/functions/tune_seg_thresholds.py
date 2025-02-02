@@ -24,6 +24,8 @@ def run(
     feature_window_length = options['feature_window_length']
     feature_overlap_length = options['feature_overlap_length']
 
+    dtw_impl = options['dtw_impl']
+
     if 'cv_options' in options.keys():
         cv_options = options['cv_options']
     else:
@@ -83,6 +85,7 @@ def run(
                     'activity_min_length': 100,
                     'feature_window_length': feature_window_length,
                     'feature_overlap_length': feature_overlap_length,
+                    'dtw_impl': dtw_impl,
                 },
             }
             

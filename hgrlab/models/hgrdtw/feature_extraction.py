@@ -32,10 +32,16 @@ def dtai_distance(series1, series2):
         use_ndim=True,
     )
 
-def dtw_distance(series1, series2):
-    return fastdtw_distance(series1, series2)
+def dtw_distance(series1, series2, dtw_impl):
+    if dtw_impl == 'fastdtw':
+        return fastdtw_distance(series1, series2)
+    
+    if dtw_impl == 'dtaidistance':
+        return dtai_distance(series1, series2)
+    
+    raise Exception('Invalid DTW distance implementation')
 
-def dtw_from_all_trials(trials, trials_indices):
+def dtw_from_all_trials(trials, trials_indices, dtw_impl):
     '''Compute DTW distances among all trials'''
 
     number_of_trials = len(trials)
@@ -47,24 +53,26 @@ def dtw_from_all_trials(trials, trials_indices):
                 distance = dtw_distance(
                     trials[i][trials_indices[i][0]:trials_indices[i][1]],
                     trials[j][trials_indices[j][0]:trials_indices[j][1]],
+                    dtw_impl,
                 )
                 
                 dtw_matrix[i, j] = dtw_matrix[j, i] = distance
                 
     return dtw_matrix
 
-def get_class_center_trial_id(trials, trials_indices, trials_labels, class_label):
+def get_class_center_trial_id(trials, trials_indices, trials_labels, class_label, dtw_impl):
     '''Get the trial_id that is the nearest among all other trial_ids from the same class'''
 
     dtw_matrix = dtw_from_all_trials(
         trials[trials_labels == class_label],
-        trials_indices[trials_labels == class_label]
+        trials_indices[trials_labels == class_label],
+        dtw_impl,
     )
 
     min_cost_index = dtw_matrix.sum(axis=0).argmin()
     return np.argwhere(trials_labels == class_label)[min_cost_index][0]
 
-def dtw_from_specific_trial_ids(trials, trials_indices, trial_ids):
+def dtw_from_specific_trial_ids(trials, trials_indices, trial_ids, dtw_impl):
     '''Compute DTW distances between each trial and specific trials'''
 
     number_of_trials = len(trials)
@@ -76,6 +84,7 @@ def dtw_from_specific_trial_ids(trials, trials_indices, trial_ids):
             distance = dtw_distance(
                 trial_data[trials_indices[i][0]:trials_indices[i][1]],
                 trials[trial_id][trials_indices[trial_id][0]:trials_indices[trial_id][1]],
+                dtw_impl,
             )
                   
             dtw_matrix[i, j] = distance
@@ -89,6 +98,7 @@ def dtw_between_two_series(
     series2,
     series2_indices,
     series2_ids,
+    dtw_impl,
     series1_preprocess=None,
     series1_sampling_rate=None,
     series2_preprocess=None,
@@ -120,6 +130,7 @@ def dtw_between_two_series(
                     series2[series2_id][series2_indices[series2_id][0]:series2_indices[series2_id][1]],
                     series2_sampling_rate,
                 ),
+                dtw_impl,
             )
 
             dtw_matrix[i, j] = distance
@@ -142,6 +153,8 @@ def extract_training_features(config):
     activity_threshold = config['activity_threshold']
     activity_extra_samples = config['activity_extra_samples']
     activity_min_length = config['activity_min_length']
+
+    dtw_impl = config['dtw_impl']
     
     trial_set = EmgTrialSet(dataset_path, user_id, dataset_type)
     trial_set_labels = trial_set.get_all_trials_labels()
@@ -168,6 +181,7 @@ def extract_training_features(config):
             activity_indices,
             trial_set_labels,
             gesture,
+            dtw_impl,
         )
     
     class_centers_trial_ids = [class_centers[key] for key in class_centers]
@@ -176,6 +190,7 @@ def extract_training_features(config):
         preprocessed_data,
         activity_indices,
         class_centers_trial_ids,
+        dtw_impl,
     )
     
     mean = dtw_matrix.mean(axis=1)
@@ -211,6 +226,8 @@ def extract_test_features(config):
     activity_threshold = config['activity_threshold']
     activity_extra_samples = config['activity_extra_samples']
     activity_min_length = config['activity_min_length']
+
+    dtw_impl = config['dtw_impl']
     
     feature_window_length = config['feature_window_length']
     feature_overlap_length = config['feature_overlap_length']
@@ -258,6 +275,7 @@ def extract_test_features(config):
             series2_ids=training_class_centers_trial_ids,
             series1_preprocess=preprocess,
             series1_sampling_rate=sampling_rate,
+            dtw_impl=dtw_impl,
         )
     
         mean = dtw_matrix.mean(axis=1)
