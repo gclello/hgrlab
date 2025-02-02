@@ -29,13 +29,14 @@ def tune_segmentation_threshold(config):
     else:
         thresholds = np.arange(threshold_min, threshold_max+1)
 
-    HUGE_ERROR = 1000
-    thresholds_errors = np.full(np.size(thresholds), HUGE_ERROR)
+    HUGE_ERROR = 1000000
+    thresholds_errors = np.full(np.size(thresholds), HUGE_ERROR, dtype=np.uint32)
+    thresholds_predictions = np.zeros((np.size(thresholds)),dtype=np.uint32)
 
     for threshold_id, threshold in enumerate(thresholds):
         config['feature_set_config']['activity_threshold'] = threshold
 
-        errors, _ = k_fold_cost(
+        errors, predictions = k_fold_cost(
             feature_set_config=config['feature_set_config'],
             folds=config['cv_folds'],
             classifier_name=config['classifier_name'],
@@ -44,11 +45,16 @@ def tune_segmentation_threshold(config):
         )
 
         thresholds_errors[threshold_id] = errors
+        thresholds_predictions[threshold_id] = predictions
 
         if errors == 0:
             break
 
-    return thresholds[np.argmax(thresholds_errors)]
+    return {
+        'threshold': thresholds[np.argmax(thresholds_errors)],
+        'errors': thresholds_errors[np.argmin(thresholds_errors)],
+        'predictions': thresholds_predictions[np.argmin(thresholds_errors)],
+    }
 
 def reduce_window_predictions(
     predictions,

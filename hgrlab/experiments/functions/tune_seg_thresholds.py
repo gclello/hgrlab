@@ -3,7 +3,7 @@ import numpy as np
 import concurrent.futures
 import multiprocessing as mp
 
-from ...experiments import print_message, print_progress, print_line_break
+from ...experiments import print_message, print_result, print_progress, print_line_break
 
 def run(
     dataset_name,
@@ -29,6 +29,11 @@ def run(
     else:
         cv_options = None
 
+    if 'classifier_options' in options.keys():
+        classifier_options = options['classifier_options']
+    else:
+        classifier_options = None
+
     task = 'Optimizing segmentation thresholds'
 
     print_line_break()
@@ -40,6 +45,8 @@ def run(
     print_message('Number of subjects: %d' % np.size(user_ids))
 
     optimum_thresholds = np.zeros((np.size(classifier_names), np.size(user_ids)), dtype=int)
+    threshold_errors = np.zeros((np.size(classifier_names), np.size(user_ids)), dtype=int)
+    threshold_predictions = np.zeros((np.size(classifier_names), np.size(user_ids)), dtype=int)
 
     num_workers = mp.cpu_count()
 
@@ -61,14 +68,20 @@ def run(
 
         user_configs = []
 
+        if classifier_options and classifier_name in classifier_options:
+            current_classifier_options = classifier_options[classifier_name]
+        else:
+            current_classifier_options = None
+
         for user_id in user_ids:
             config = {
-                'classifier_name': classifier_name,
                 'threshold_min': threshold_min,
                 'threshold_max': threshold_max,
                 'threshold_direction': 'desc',
                 'cv_folds': folds,
                 'cv_options': cv_options,
+                'classifier_name': classifier_name,
+                'classifier_options': current_classifier_options,
                 'feature_set_config': {
                     'user_id': user_id,
                     'ds_name': dataset_name,
@@ -107,7 +120,9 @@ def run(
                     )
                 )
                 
-                optimum_thresholds[classifier_id,i] = result
+                optimum_thresholds[classifier_id,i] = result['threshold']
+                threshold_errors[classifier_id,i] = result['errors']
+                threshold_predictions[classifier_id,i] = result['predictions']
 
     end_ts = datetime.datetime.now()
 
@@ -120,6 +135,21 @@ def run(
             classifier,
             optimum_thresholds[classifier_id],
         )
+
+    print_line_break()
+    print_message('Validation accuracy:')
+
+    for classifier_id, classifier in enumerate(classifier_names):
+        errors = threshold_errors[classifier_id].sum()
+        predictions = threshold_predictions[classifier_id].sum()
+
+        print_result('%03s_%d-fold_CV_acc = %.1f (%d/%d)' % (
+            classifier,
+            folds,
+            (1 - errors / predictions) * 100,
+            errors,
+            predictions,
+        ))
 
     print_line_break()
     print_message(
