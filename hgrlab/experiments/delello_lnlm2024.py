@@ -152,7 +152,7 @@ def find_optimum_segmentation_thresholds_by_classifier_and_user(
     end_ts = datetime.datetime.now()
 
     output_message = '%s\n%s\n' % (
-        'Table 1: Optimum individual segmentation thresholds using 4-fold cross-validation',
+        'Optimum individual segmentation thresholds using 4-fold cross-validation',
         'Lines: classifiers | Columns: subjects'
     )
     for classifier_id, classifier in enumerate(classifier_names):
@@ -259,6 +259,8 @@ def assess_hgr_systems_by_classifier_and_user(
     assets_dir,
     user_ids,
     options,
+    feature_window_length=500,
+    feature_overlap_length=490,
     experiment_runs=100,
 ):
     start_ts = datetime.datetime.now()
@@ -322,6 +324,8 @@ def assess_hgr_systems_by_classifier_and_user(
                     'activity_threshold': optimum_threshold,
                     'activity_extra_samples': 25,
                     'activity_min_length': 100,
+                    'feature_window_length': feature_window_length,
+                    'feature_overlap_length': feature_overlap_length,
                 },
             }
             
@@ -356,48 +360,51 @@ def assess_hgr_systems_by_classifier_and_user(
 
     end_ts = datetime.datetime.now()
 
-    table2 = ''
+    acc_by_classifier_output = ''
     for classifier_id, classifier in enumerate(classifier_names):
-        table2 = '%s\n%03s: %.1f \u00B1 %.1f' % (
-            table2,
+        acc_by_classifier_output = '%s\n%03s: %.1f \u00B1 %.1f' % (
+            acc_by_classifier_output,
             classifier,
             accuracy_mean[classifier_id] * 100,
             accuracy_per_experiment[classifier_id].std(ddof=1) * 100,
         )
 
-    accuracy_by_classifier_output = '%s\n%s\n%s' % (
-        'Table 2: Mean accuracy and standard deviation of the HGR systems using different classifiers',
+    acc_by_classifier_output = '%s\n%s\n%s' % (
+        'Mean accuracy and standard deviation of the HGR systems using different classifiers',
         'Lines: classifiers | Data: mean accuracy and standard deviation (%)',
-        table2,
+        acc_by_classifier_output,
     )
     
-    table3 = '    ' + '    '.join(['%12s' % name for name in classifier_names])
+    acc_by_subject_output = '    ' + '    '.join(
+        ['%12s' % name for name in classifier_names]
+    )
+
     for i, user_id in enumerate(user_ids):
-        table3 = table3 + '\n#%02s:' % user_id
+        acc_by_subject_output = acc_by_subject_output + '\n#%02s:' % user_id
         for classifier_id, classifier in enumerate(classifier_names):
-            table3 = '{TABLE3}    {MEAN:5.1f} \u00B1 {STD:4.1f}'.format(
-                TABLE3=table3,
+            acc_by_subject_output = '{OUTPUT}    {MEAN:5.1f} \u00B1 {STD:4.1f}'.format(
+                OUTPUT=acc_by_subject_output,
                 MEAN=accuracy_per_user[classifier_id,i] * 100,
                 STD=accuracy[classifier_id,i].std(ddof=1) * 100,
             )
 
-    table3 = table3 + '\n\nAVG '
+    acc_by_subject_output = acc_by_subject_output + '\n\nAVG '
     for classifier_id, classifier in enumerate(classifier_names):
-        table3 = '{TABLE3}    {MEAN:5.1f} \u00B1 {STD:4.1f}'.format(
-            TABLE3=table3,
+        acc_by_subject_output = '{OUTPUT}    {MEAN:5.1f} \u00B1 {STD:4.1f}'.format(
+            OUTPUT=acc_by_subject_output,
             MEAN=accuracy_mean[classifier_id] * 100,
             STD=accuracy_per_user.std(axis=1,ddof=1)[classifier_id] * 100,
         )
 
-    accuracy_by_subject_output = '%s\n%s\n%s' % (
-        'Table 3: Mean accuracy and standard deviation by subject for different classifiers',
+    acc_by_subject_output = '%s\n%s\n%s' % (
+        'Mean accuracy and standard deviation by subject for different classifiers',
         'Lines: subjects | Columns: classifiers | Data: mean accuracy and standard deviation (%)',
-        table3,
+        acc_by_subject_output,
     )
 
     output_message = '%s\n\n%s' % (
-        accuracy_by_classifier_output,
-        accuracy_by_subject_output
+        acc_by_classifier_output,
+        acc_by_subject_output,
     )
     
     print_line_break()
@@ -410,7 +417,7 @@ def assess_hgr_systems_by_classifier_and_user(
 
     return {
         'data': accuracy,
-        'message':  output_message,
+        'message': output_message,
     }
 
 def main():
