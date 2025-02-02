@@ -149,7 +149,7 @@ class FeatureSet:
             'stft_window_length': self.stft_window_length,
             'stft_window_overlap': self.stft_window_overlap,
             'stft_nfft': self.stft_nfft,
-            'dtw_impl': 'fastdtw',
+            'dtw_impl': self.dtw_impl,
         }
 
         training_data = extract_training_features(config)

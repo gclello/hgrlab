@@ -39,7 +39,7 @@ def dtw_distance(series1, series2, dtw_impl):
     if dtw_impl == 'dtaidistance':
         return dtai_distance(series1, series2)
     
-    raise Exception('Invalid DTW distance implementation')
+    raise Exception('Invalid DTW distance implementation "%s"' % dtw_impl)
 
 def dtw_from_all_trials(trials, trials_indices, dtw_impl):
     '''Compute DTW distances among all trials'''
