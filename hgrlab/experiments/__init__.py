@@ -33,8 +33,12 @@ def run_experiments(
         )
         results.append(result)
 
+    end_ts = datetime.datetime.now()
+
     print_line_break()
     print_message('Finished all experiments')
+    print_line_break()
+    print_message('Total time elapsed: %s' % str(end_ts - start_ts))
     print_line_break()
     print_result('# Experimental results')
 
@@ -43,9 +47,6 @@ def run_experiments(
             print_line_break()
             print_result(result['message'])
 
-    end_ts = datetime.datetime.now()
-    print_line_break()
-    print_message('Total time elapsed: %s' % str(end_ts - start_ts))
     print_line_break()
 
     return results
