@@ -6,8 +6,6 @@ import multiprocessing as mp
 from ...experiments import print_message, print_progress, print_line_break
 
 def run(
-    experiment_id,
-    total_experiments,
     dataset_name,
     assets_dir,
     user_ids,
@@ -33,10 +31,9 @@ def run(
 
     task = 'Optimizing segmentation thresholds'
 
+    print_line_break()
     print_message(
-        'Experiment %d of %d: Optimize HGR segmentation thresholds using %d-fold cross-validation' % (
-            experiment_id,
-            total_experiments,
+        'Optimize HGR segmentation thresholds using %d-fold cross-validation' % (
             folds,
     ))
     print_message('Classifiers: %s' % classifier_names)
@@ -56,7 +53,7 @@ def run(
         print_progress(
             task,
             get_progress(classifier_id),
-            'running %s-fold cross-validation on classifier %s...' % (
+            'running %s-fold CV on classifier %s...' % (
                 folds,
                 classifier_name,
             )
@@ -123,14 +120,13 @@ def run(
             classifier,
             optimum_thresholds[classifier_id],
         )
-    
+
     print_line_break()
-    print_message('Finished segmentation threshold optimization')
-    print_message('Time elapsed in experiment %d of %d: %s' % (
-        experiment_id,
-        total_experiments,
-        str(end_ts - start_ts),
-    ))
+    print_message(
+        'Finished segmentation threshold optimization (time elapsed: {INTERVAL})'.format(
+            INTERVAL=str(end_ts - start_ts),
+        )
+    )
 
     return {
         'data': optimum_thresholds,

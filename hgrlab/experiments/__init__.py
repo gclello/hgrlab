@@ -20,12 +20,20 @@ def run_experiments(
         setup()
 
     results = []
+    total_experiments = np.size(experiments)
 
     for i, experiment in enumerate(experiments):
+        experiment_start_ts = datetime.datetime.now()
+        experiment_id = i + 1
+        
         print_line_break()
+        print_message(
+            'Running experiment %d of %d...' % (
+                experiment_id,
+                total_experiments,
+        ))
+
         result = experiment(
-            experiment_id=i+1,
-            total_experiments=np.size(experiments),
             dataset_name=dataset_name,
             assets_dir=assets_dir,
             user_ids=user_ids,
@@ -33,11 +41,19 @@ def run_experiments(
         )
         results.append(result)
 
+        experiment_end_ts = datetime.datetime.now()
+
+        print_line_break()
+        print_message('Time elapsed in experiment %d of %d: %s' % (
+            experiment_id,
+            total_experiments,
+            str(experiment_end_ts - experiment_start_ts),
+        ))
+
     end_ts = datetime.datetime.now()
 
     print_line_break()
     print_message('Finished all experiments')
-    print_line_break()
     print_message('Total time elapsed: %s' % str(end_ts - start_ts))
     print_line_break()
     print_result('# Experimental results')

@@ -129,16 +129,12 @@ def eval_hgr_system(config):
     return errors, trials
 
 def tune_segmentation_thresholds_by_classifier_and_user(
-    experiment_id,
-    total_experiments,
     dataset_name,
     assets_dir,
     user_ids,
     options,
 ):
     return tune_seg_thresholds.run(
-        experiment_id,
-        total_experiments,
         dataset_name,
         assets_dir,
         user_ids,
@@ -149,16 +145,12 @@ def tune_segmentation_thresholds_by_classifier_and_user(
     )
 
 def eval_hgr_systems_by_classifier_and_user(
-    experiment_id,
-    total_experiments,
     dataset_name,
     assets_dir,
     user_ids,
     options,
 ):
     return eval_hgr_systems.run(
-        experiment_id,
-        total_experiments,
         dataset_name,
         assets_dir,
         user_ids,
@@ -171,18 +163,19 @@ def main():
     publication = "Comparison of sEMG-Based Hand Gesture Classifiers"
     url = "https://doi.org/10.21528/lnlm-vol22-no2-art4"
     authors = 'Guilherme C. De Lello, Gabriel S. Chaves, Juliano F. Caldeira, and Markus V.S. Lima'
-    title = 'Publication: {PUBLICATION}\nURL: {URL}\n\nExperiments conducted by {AUTHORS} on March 2024'.format(
+    title = '{PUBLICATION}\n{URL}\n\nExperiments conducted by {AUTHORS} on March 2024'.format(
         PUBLICATION=publication,
         URL=url,
         AUTHORS=authors,
     )
 
+    experiment = 'lnlm2024'
     dataset_name='emgepn10'
     dtw_impl = 'fastdtw'
 
     base_dir = os.path.join(
         AssetManager.get_base_dir(),
-        '%s_%s' % (dataset_name, dtw_impl)
+        '%s_%s_%s' % (experiment, dataset_name, dtw_impl)
     )
 
     thresholds = {

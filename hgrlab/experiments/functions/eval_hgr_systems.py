@@ -6,8 +6,6 @@ import multiprocessing as mp
 from ...experiments import print_message, print_progress, print_line_break
 
 def run(
-    experiment_id,
-    total_experiments,
     dataset_name,
     assets_dir,
     user_ids,
@@ -41,10 +39,9 @@ def run(
         dtype=np.uint32
     )
 
+    print_line_break()
     print_message(
-        'Experiment %d of %d: Compare the accuracy of HGR systems using %d classifiers ' % (
-            experiment_id,
-            total_experiments,
+        'Evaluate the accuracy of HGR systems using %d classifiers ' % (
             number_of_classifiers,
     ))
     print_message('Classifiers: %s' % classifier_names)
@@ -166,12 +163,11 @@ def run(
     )
     
     print_line_break()
-    print_message('Finished evaluation of HGR systems')
-    print_message('Time elapsed in experiment %d of %d: %s' % (
-        experiment_id,
-        total_experiments,
-        str(end_ts - start_ts),
-    ))
+    print_message(
+        'Finished evaluation of HGR systems (time elapsed: {INTERVAL})'.format(
+            INTERVAL=str(end_ts - start_ts),
+        )
+    )
 
     return {
         'data': accuracy,
