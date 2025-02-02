@@ -7,7 +7,7 @@ from ..models.hgrdtw import k_fold_cost, FeatureSet
 from ..models.hgrdtw import build_classifier, fit, predict
 from ..utils import AssetManager
 
-from ..experiments import run_experiments, print_message, print_progress, print_result, print_line_break
+from ..experiments import run_experiments, print_message, print_progress, print_result, print_line_break, download_assets
 from ..experiments.data import emgepn10
 
 def find_optimum_segmentation_threshold(config):
@@ -406,70 +406,24 @@ def assess_hgr_systems_by_classifier_and_user(
         str(end_ts - start_ts),
     ))
 
-def download_assets():
-    start_ts = datetime.datetime.now()
-    
-    task = 'Download HGR dataset'
-
-    asset_manager = AssetManager()
-
-    training_dataset_assets = emgepn10.get_dataset_assets('training')
-    test_feature_assets = emgepn10.get_feature_assets('test')
-
-    assets = {
-        **training_dataset_assets,
-        **test_feature_assets
-    }
-
-    total_files =  len(assets.keys())
-
-    print_progress(
-        task,
-        progress=0.0,
-        status='downloading %d files...' % total_files,
-    )
-
-    for i, key in enumerate(assets.keys()):
-        asset_manager.add_remote_asset(
-            key,
-            assets[key]['remote_id'],
-            assets[key]['filename'],
-        )
-
-        cached = asset_manager.download_asset(key)
-
-        if cached:
-            message = 'found file %2d of %2d in local cache (%s)'
-        else:
-            message = 'downloaded file %2d of %2d (%s)' 
-
-        print_progress(
-            task,
-            progress=(i+1)/total_files,
-            status=message % (
-                i+1,
-                total_files,
-                assets[key]['filename'],
-            ),
-        )
-    
-    end_ts = datetime.datetime.now()
-    print_line_break()
-    print_message('Finished downloading files')
-    print_message('Time elapsed downloading files: %s' % str(end_ts - start_ts))
-
-    return asset_manager
-
 def main():
     authors = 'Guilherme C. De Lello, Gabriel S. Chaves, Juliano F. Caldeira, and Markus V.S. Lima'
     title = 'HGR experiments conducted by %s on March 2024' % authors
+
+    def setup():
+        assets = {
+            **emgepn10.get_dataset_assets('training'),
+            **emgepn10.get_feature_assets('test'),
+        }
+
+        download_assets(AssetManager(), assets)
 
     run_experiments(
         title,
         dataset_name='emgepn30',
         assets_dir=AssetManager.get_base_dir(),
         user_ids=np.arange(1, 11),
-        setup=download_assets,
+        setup=setup,
         experiments=[
             find_optimum_segmentation_thresholds_by_classifier_and_user,
             assess_hgr_systems_by_classifier_and_user,
