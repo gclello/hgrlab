@@ -34,9 +34,19 @@ def run_experiments(
         results.append(result)
 
     end_ts = datetime.datetime.now()
+
     print_line_break()
     print_message('Finished all experiments')
+    print_line_break()
     print_message('Total time elapsed: %s' % str(end_ts - start_ts))
+    print_line_break()
+    print_result('# Experimental results')
+
+    for result in results:
+        if 'message' in result:
+            print_line_break()
+            print_result(result['message'])
+
     print_line_break()
 
     return results
@@ -74,3 +84,46 @@ def print_progress(task, progress, status):
         PROGRESS=progress*100,
         STATUS=status,
     ))
+
+def download_assets(asset_manager, assets, dir=None):
+    start_ts = datetime.datetime.now()
+    
+    task = 'Download HGR datasets'
+    total_files =  len(assets.keys())
+
+    print_progress(
+        task,
+        progress=0.0,
+        status='downloading %d files...' % total_files,
+    )
+
+    for i, key in enumerate(assets.keys()):
+        asset_manager.add_remote_asset(
+            key,
+            assets[key]['remote_id'],
+            assets[key]['filename'],
+        )
+
+        cached = asset_manager.download_asset(key, dir)
+
+        if cached:
+            message = 'found file %2d of %2d in local cache (%s)'
+        else:
+            message = 'downloaded file %2d of %2d (%s)' 
+
+        print_progress(
+            task,
+            progress=(i+1)/total_files,
+            status=message % (
+                i+1,
+                total_files,
+                assets[key]['filename'],
+            ),
+        )
+    
+    end_ts = datetime.datetime.now()
+    print_line_break()
+    print_message('Finished downloading files')
+    print_message('Time elapsed downloading files: %s' % str(end_ts - start_ts))
+
+    return asset_manager

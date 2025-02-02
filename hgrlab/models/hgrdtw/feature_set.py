@@ -58,6 +58,7 @@ class FeatureSet:
             stft_nfft=50,
             feature_window_length=500,
             feature_overlap_length=490,
+            dtw_impl='dtaidistance',
         ):
             if not os.path.isdir(ds_dir):
                 raise FeatureSetError(
@@ -78,6 +79,7 @@ class FeatureSet:
             self.stft_nfft = stft_nfft
             self.feature_window_length = feature_window_length
             self.feature_overlap_length = feature_overlap_length
+            self.dtw_impl = dtw_impl
 
     def __str__(self):
         config = {
@@ -94,6 +96,7 @@ class FeatureSet:
             'stft_nfft': self.stft_nfft,
             'feature_window_length': self.feature_window_length,
             'feature_overlap_length': self.feature_overlap_length,
+            'dtw_impl': self.dtw_impl,
         }
 
         return '[EMG Feature Set] %s' % config
@@ -111,14 +114,19 @@ class FeatureSet:
         h.update(str(self.stft_nfft).encode(encoding='utf-8'))
         h.update(str(self.feature_window_length).encode(encoding='utf-8'))
         h.update(str(self.feature_overlap_length).encode(encoding='utf-8'))
+
+        if self.dtw_impl != 'fastdtw':
+            h.update(self.dtw_impl.encode(encoding='utf-8'))
+        
         return h.hexdigest()
     
     def get_features_file_name(self):
-        return '{DS_NAME}_features_{USER_PREFIX}{USER_ID}_{DS_TYPE}_{HASH}{FILE_EXTENSION}'.format(
+        return '{DS_NAME}_features_{USER_PREFIX}{USER_ID}_{DS_TYPE}_{DTW_IMPL}_{HASH}{FILE_EXTENSION}'.format(
             DS_NAME=self.ds_name,
             USER_PREFIX=self.USER_PREFIX,
             USER_ID=self.user_id,
             DS_TYPE=self.ds_type,
+            DTW_IMPL=self.dtw_impl,
             HASH=self.get_hash(),
             FILE_EXTENSION=FeatureSet.FILE_EXTENSION,
         )
@@ -141,6 +149,7 @@ class FeatureSet:
             'stft_window_length': self.stft_window_length,
             'stft_window_overlap': self.stft_window_overlap,
             'stft_nfft': self.stft_nfft,
+            'dtw_impl': self.dtw_impl,
         }
 
         training_data = extract_training_features(config)
@@ -178,6 +187,7 @@ class FeatureSet:
             f.attrs['stft_nfft'] = self.stft_nfft
             f.attrs['feature_window_length'] = self.feature_window_length
             f.attrs['feature_overlap_length'] = self.feature_overlap_length
+            f.attrs['dtw_impl'] = self.dtw_impl
 
         return path
     
