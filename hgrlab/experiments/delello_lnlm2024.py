@@ -168,19 +168,53 @@ def eval_hgr_systems_by_classifier_and_user(
     )
 
 def main():
+    publication = "Comparison of sEMG-Based Hand Gesture Classifiers"
+    url = "https://doi.org/10.21528/lnlm-vol22-no2-art4"
     authors = 'Guilherme C. De Lello, Gabriel S. Chaves, Juliano F. Caldeira, and Markus V.S. Lima'
-    title = 'HGR experiments conducted by %s on March 2024' % authors
+    title = 'Publication: {PUBLICATION}\nURL: {URL}\n\nExperiments conducted by {AUTHORS} on March 2024'.format(
+        PUBLICATION=publication,
+        URL=url,
+        AUTHORS=authors,
+    )
 
     dataset_name='emgepn10'
-    base_dir = os.path.join(AssetManager.get_base_dir(), dataset_name)
+    dtw_impl = 'fastdtw'
 
-    def setup():
-        assets = {
+    base_dir = os.path.join(
+        AssetManager.get_base_dir(),
+        '%s_%s' % (dataset_name, dtw_impl)
+    )
+
+    thresholds = {
+        'fastdtw': {
+            'svm': [19, 20, 12, 19, 19, 19, 19, 19, 19, 19],
+            'lr':  [19, 20, 19, 19, 19, 19, 19, 19, 19, 19],
+            'lda': [19, 20, 15, 19, 17, 16, 19, 19, 19, 19],
+            'knn': [19, 20, 19, 19, 14, 16, 19, 19, 19, 19],
+            'dt':  [18, 18, 20, 16, 11, 18, 14, 19, 19, 20],
+        },
+        'dtaidistance': {
+            'svm': [19, 20, 19, 19, 19, 19, 19, 19, 19, 19],
+            'lr':  [19, 20, 19, 19, 19, 20, 19, 19, 19, 19],
+            'lda': [19, 20, 19, 19, 13, 20, 19, 19, 19, 19],
+            'knn': [19, 20, 20, 19, 19, 18, 19, 19, 19, 19],
+            'dt':  [11, 17, 19, 12, 18, 14, 12, 20, 10, 13],
+        },
+    }
+
+    assets = {
+        'fastdtw': {
             **emgepn10.get_dataset_assets('training'),
             **emgepn10.get_feature_assets('test'),
+        },
+        'dtaidistance': {
+            **emgepn10.get_dataset_assets('training'),
+            **emgepn10.get_dataset_assets('test'),
         }
+    }
 
-        download_assets(AssetManager(), assets, base_dir)
+    def setup():
+        download_assets(AssetManager(), assets[dtw_impl], base_dir)
 
     run_experiments(
         title,
@@ -202,16 +236,10 @@ def main():
                 'knn',
                 'dt',
             ],
-            'thresholds': {
-                'svm': [19, 20, 12, 19, 19, 19, 19, 19, 19, 19],
-                'lr': [19, 20, 19, 19, 19, 19, 19, 19, 19, 19],
-                'lda': [19, 20, 15, 19, 17, 16, 19, 19, 19, 19],
-                'knn': [19, 20, 19, 19, 14, 16, 19, 19, 19, 19],
-                'dt': [18, 18, 20, 16, 11, 18, 14, 19, 19, 20],
-            },
+            'thresholds': thresholds[dtw_impl],
             'feature_window_length': 500,
             'feature_overlap_length': 490,
-            'dtw_impl': 'fastdtw',
+            'dtw_impl': dtw_impl,
         }
     )
 
