@@ -5,7 +5,8 @@ def run_experiments(
     title,
     dataset_name,
     experiments,
-    assets_dir,
+    ds_dir,
+    fs_dir,
     user_ids,
     options={},
     setup=None,
@@ -35,7 +36,8 @@ def run_experiments(
 
         result = experiment(
             dataset_name=dataset_name,
-            assets_dir=assets_dir,
+            ds_dir=ds_dir,
+            fs_dir=fs_dir,
             user_ids=user_ids,
             options=options,
         )

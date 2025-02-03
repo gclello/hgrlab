@@ -7,7 +7,8 @@ from ...experiments import print_message, print_progress, print_line_break
 
 def run(
     dataset_name,
-    assets_dir,
+    ds_dir,
+    fs_dir,
     user_ids,
     options,
     eval_hgr_system,
@@ -92,8 +93,8 @@ def run(
                 'feature_set_config': {
                     'user_id': user_id,
                     'ds_name': dataset_name,
-                    'ds_dir': assets_dir,
-                    'fs_dir': assets_dir,
+                    'ds_dir': ds_dir,
+                    'fs_dir': fs_dir,
                     'stft_window_length': 25,
                     'stft_window_overlap': 10,
                     'stft_nfft': 50,

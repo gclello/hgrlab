@@ -179,13 +179,15 @@ def eval_hgr_system(config):
 
 def tune_and_eval_hgr_systems_by_classifier_and_user(
     dataset_name,
-    assets_dir,
+    ds_dir,
+    fs_dir,
     user_ids,
     options,
 ):
     tuning_result = tune_seg_thresholds.run(
         dataset_name,
-        assets_dir,
+        ds_dir,
+        fs_dir,
         user_ids,
         options,
         threshold_direction='desc',
@@ -203,7 +205,8 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
 
     eval_result = eval_hgr_systems.run(
         dataset_name,
-        assets_dir,
+        ds_dir,
+        fs_dir,
         user_ids,
         options,
         experiment_runs=100,
@@ -244,18 +247,22 @@ def main():
         '%s_%s_%s' % (experiment, dataset_name, dtw_impl)
     )
 
+    ds_dir = '%s_%s' % (base_dir, "ds")
+    fs_dir = '%s_%s' % (base_dir, "fs")
+
     assets = {
         **emgepn10.get_dataset_assets('training'),
         **emgepn10.get_dataset_assets('test'),
     }
 
     def setup():
-        download_assets(AssetManager(), assets, base_dir)
+        download_assets(AssetManager(), assets, ds_dir)
 
     run_experiments(
-        title,
-        dataset_name,
-        assets_dir=base_dir,
+        title=title,
+        dataset_name=dataset_name,
+        ds_dir=ds_dir,
+        fs_dir=fs_dir,
         user_ids=np.arange(1, 11),
         setup=setup,
         experiments=[

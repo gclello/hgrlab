@@ -7,7 +7,8 @@ from ...experiments import print_message, print_result, print_progress, print_li
 
 def run(
     dataset_name,
-    assets_dir,
+    ds_dir,
+    fs_dir,
     user_ids,
     options,
     tune_segmentation_threshold,
@@ -87,8 +88,8 @@ def run(
                     'user_id': user_id,
                     'ds_name': dataset_name,
                     'ds_type': 'training',
-                    'ds_dir': assets_dir,
-                    'fs_dir': assets_dir,
+                    'ds_dir': ds_dir,
+                    'fs_dir': fs_dir,
                     'stft_window_length': 25,
                     'stft_window_overlap': 10,
                     'stft_nfft': 50,

@@ -139,13 +139,15 @@ def eval_hgr_system(config):
 
 def tune_segmentation_thresholds_by_classifier_and_user(
     dataset_name,
-    assets_dir,
+    ds_dir,
+    fs_dir,
     user_ids,
     options,
 ):
     return tune_seg_thresholds.run(
         dataset_name,
-        assets_dir,
+        ds_dir,
+        fs_dir,
         user_ids,
         options,
         threshold_min=10,
@@ -155,13 +157,15 @@ def tune_segmentation_thresholds_by_classifier_and_user(
 
 def eval_hgr_systems_by_classifier_and_user(
     dataset_name,
-    assets_dir,
+    ds_dir,
+    fs_dir,
     user_ids,
     options,
 ):
     return eval_hgr_systems.run(
         dataset_name,
-        assets_dir,
+        ds_dir,
+        fs_dir,
         user_ids,
         options,
         experiment_runs=100,
@@ -187,6 +191,9 @@ def main():
         '%s_%s_%s' % (experiment, dataset_name, dtw_impl)
     )
 
+    ds_dir = '%s_%s' % (base_dir, "ds")
+    fs_dir = '%s_%s' % (base_dir, "fs")
+
     thresholds = {
         'fastdtw': {
             'svm': [19, 20, 12, 19, 19, 19, 19, 19, 19, 19],
@@ -204,10 +211,9 @@ def main():
         },
     }
 
-    assets = {
+    semg_assets = {
         'fastdtw': {
             **emgepn10.get_dataset_assets('training'),
-            **emgepn10.get_feature_assets('test'),
         },
         'dtaidistance': {
             **emgepn10.get_dataset_assets('training'),
@@ -215,13 +221,23 @@ def main():
         }
     }
 
+    feature_assets = {
+        'fastdtw': {
+            **emgepn10.get_feature_assets('test'),
+        },
+        'dtaidistance': {
+        }
+    }
+
     def setup():
-        download_assets(AssetManager(), assets[dtw_impl], base_dir)
+        download_assets(AssetManager(), semg_assets[dtw_impl], ds_dir)
+        download_assets(AssetManager(), feature_assets[dtw_impl], fs_dir)
 
     run_experiments(
-        title,
-        dataset_name,
-        assets_dir=base_dir,
+        title=title,
+        dataset_name=dataset_name,
+        ds_dir=ds_dir,
+        fs_dir=fs_dir,
         user_ids=np.arange(1, 11),
         setup=setup,
         experiments=[
