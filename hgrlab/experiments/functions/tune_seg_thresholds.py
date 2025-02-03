@@ -11,6 +11,7 @@ def run(
     user_ids,
     options,
     tune_segmentation_threshold,
+    threshold_direction='desc',
     threshold_min=10,
     threshold_max=20,
 ):
@@ -77,7 +78,7 @@ def run(
             config = {
                 'threshold_min': threshold_min,
                 'threshold_max': threshold_max,
-                'threshold_direction': 'desc',
+                'threshold_direction': threshold_direction,
                 'cv_folds': folds,
                 'cv_options': cv_options,
                 'classifier_name': classifier_name,
