@@ -56,7 +56,7 @@ def tune_segmentation_threshold(config):
         'predictions': thresholds_predictions[np.argmin(thresholds_errors)],
     }
 
-def reduce_window_predictions(
+def eliminate_consecutive_gestures(
     predictions,
     window_start_activity_indexes,
     window_end_activity_indexes,
@@ -122,7 +122,7 @@ def eval_hgr_system(config):
         for trial_id, X_test_windows in enumerate(X_test):
             test_window_predictions = predict(model, X_test_windows)
 
-            prediction[trial_id] = reduce_window_predictions(
+            prediction[trial_id] = eliminate_consecutive_gestures(
                 test_window_predictions,
                 test_activity_indices[trial_id,:,0],
                 test_activity_indices[trial_id,:,1],
@@ -132,7 +132,10 @@ def eval_hgr_system(config):
         errors[experiment] = np.size(y_test[y_test != prediction])
         trials[experiment] = np.size(y_test)
 
-    return errors, trials
+    return {
+        'errors': errors,
+        'predictions': trials,
+    }
 
 def tune_segmentation_thresholds_by_classifier_and_user(
     dataset_name,

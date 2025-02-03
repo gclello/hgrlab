@@ -23,6 +23,16 @@ def run(
 
     dtw_impl = options['dtw_impl']
 
+    if 'prediction_reduction_method' in options.keys():
+        prediction_reduction_method = options['prediction_reduction_method']
+    else:
+        prediction_reduction_method = None
+
+    if 'classifier_options' in options.keys():
+        classifier_options = options['classifier_options']
+    else:
+        classifier_options = None
+
     task = 'Evaluating HGR systems'
 
     max_workers = mp.cpu_count()
@@ -61,12 +71,24 @@ def run(
         )
 
         user_configs = []
+        if classifier_options and classifier_name in classifier_options:
+            current_classifier_options = classifier_options[classifier_name]
+        else:
+            current_classifier_options = None
 
         for i, user_id in enumerate(user_ids):
+            if current_classifier_options and user_id in current_classifier_options:
+                current_user_classifier_options = current_classifier_options[user_id]
+            else:
+                current_user_classifier_options = None
+
             optimum_threshold = thresholds[classifier_name][i]
+
             config = {
                 'classifier_name': classifier_name,
+                'classifier_options': current_user_classifier_options,
                 'experiments': experiment_runs,
+                'prediction_reduction_method': prediction_reduction_method,
                 'feature_set_config': {
                     'user_id': user_id,
                     'ds_name': dataset_name,
@@ -105,8 +127,8 @@ def run(
                     )
                 )
                 
-                errors[classifier_id,i,:] = result[0]
-                trials[classifier_id,i,:] = result[1]
+                errors[classifier_id,i,:] = result['errors']
+                trials[classifier_id,i,:] = result['predictions']
 
     accuracy = (trials - errors) / trials
     accuracy_mean = accuracy.mean(axis=(1,2))
