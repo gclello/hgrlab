@@ -145,7 +145,7 @@ def run(
         errors = threshold_errors[classifier_id].sum()
         predictions = threshold_predictions[classifier_id].sum()
 
-        print_result('%03s_%d-fold_CV_acc = %.1f (%d/%d)' % (
+        print_result('%03s_%d-fold_CV_acc = %.1f%% (%d/%d)' % (
             classifier,
             folds,
             (1 - errors / predictions) * 100,
