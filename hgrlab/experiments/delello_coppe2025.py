@@ -229,60 +229,109 @@ def main():
         AUTHOR=author,
     )
 
-    experiment = 'coppe2025'
-    dataset_name='emgepn10'
-    dtw_impl = 'dtaidistance'
-    cv_strategy = '5-fold-stratified-cv'
-    prediction_reduction_method = 'majority_voting'
-
-    if cv_strategy == '5-fold-stratified-cv':
-        cv_folds = 5
-        cv_options = None
-    else:
-        cv_folds = 4
-        cv_options = {'val_size_per_class': 2}  
-
-    base_dir = os.path.join(
-        AssetManager.get_base_dir(),
-        '%s_%s_%s' % (experiment, dataset_name, dtw_impl)
-    )
-
-    ds_dir = '%s_%s' % (base_dir, "ds")
-    fs_dir = '%s_%s' % (base_dir, "fs")
-
-    assets = {
-        **emgepn10.get_dataset_assets('training'),
-        **emgepn10.get_dataset_assets('test'),
-    }
-
-    def setup():
-        download_assets(AssetManager(), assets, ds_dir)
-
-    run_experiments(
-        title=title,
-        dataset_name=dataset_name,
-        ds_dir=ds_dir,
-        fs_dir=fs_dir,
-        user_ids=np.arange(1, 11),
-        setup=setup,
-        experiments=[
-            tune_and_eval_hgr_systems_by_classifier_and_user,
-        ],
-        options={
-            'cv_folds': cv_folds,
-            'cv_options': cv_options,
+    profiles = {
+        'coppe2025': {
+            'dtw_impl': 'dtaidistance',
+            'cv_folds': 5,
+            'cv_options': None,
+            'prediction_reduction_method': 'majority_voting',
+            'feature_window_length': 500,
+            'feature_overlap_length': 490,
             'classifier_names': [
                 'svm',
                 'lr',
                 'lda',
                 'knn',
                 'dt',
+                'twsd',
             ],
-            'dtw_impl': dtw_impl,
+        },
+        'lnlm2024': {
+            'dtw_impl': 'fastdtw',
+            'cv_folds': 4,
+            'cv_options': {'val_size_per_class': 2},
+            'prediction_reduction_method': 'baseline',
             'feature_window_length': 500,
             'feature_overlap_length': 490,
-            'prediction_reduction_method': prediction_reduction_method,
+            'classifier_names': [
+                'svm',
+                'lr',
+                'lda',
+                'knn',
+            ],
         }
+    }
+
+    datasets = {
+        'emgepn10': {
+            'user_ids': np.arange(1, 11),
+            'assets': {
+                'semg': {
+                    **emgepn10.get_dataset_assets('training'),
+                    **emgepn10.get_dataset_assets('test'),
+                },
+                'feature': {
+                    **emgepn10.get_feature_assets('test')
+                }
+            }
+        },
+        'emgepn120': {
+            'user_ids': np.arange(1, 61),
+            'assets': {
+                'semg': {},
+                'feature': {},
+            },
+        }
+    }
+
+    try:
+        from dotenv import dotenv_values
+        config = dotenv_values(".env")
+    except(Exception):
+        config = {}
+
+    profile = config['PROFILE'] if 'PROFILE' in config.keys() else 'coppe2025'
+    ds_name = config['DS_NAME'] if 'DS_NAME' in config.keys() else 'emgepn10'
+
+    base_dir = os.path.join(
+        AssetManager.get_base_dir(),
+        '%s_%s_%s' % (profile, ds_name, profiles[profile]['dtw_impl'])
+    )
+
+    ds_dir = config['DS_DIR'] if 'DS_DIR' in config.keys() else None
+    fs_dir = config['FS_DIR'] if 'FS_DIR' in config.keys() else '%s_%s' % (base_dir, 'fs')
+
+    should_download_semg_assets = False
+
+    if ds_dir is None:
+        should_download_semg_assets = True
+        ds_dir = '%s_%s' % (base_dir, 'ds')
+
+    def setup():
+        semg_assets = datasets[ds_name]['assets']['semg']
+        feature_assets = datasets[ds_name]['assets']['feature']
+        
+        if should_download_semg_assets and semg_assets is not None:
+            download_assets(AssetManager(), semg_assets, ds_dir)
+
+        if feature_assets is not None:
+            download_assets(AssetManager(), feature_assets, fs_dir)
+
+    print('Dataset name = %s ("%s")' % (ds_name, ds_dir))
+    print('Temp path = "%s"' % fs_dir)
+    print('Options = %s' % profiles[profile])
+
+    run_experiments(
+        title=title,
+        dataset_name=ds_name,
+        ds_dir=ds_dir,
+        fs_dir=fs_dir,
+        user_ids=datasets[ds_name]['user_ids'],
+        setup=setup,
+        experiments=[
+            tune_and_eval_hgr_systems_by_classifier_and_user,
+        ],
+        options=profiles[profile],
     )
 
 if __name__ == '__main__':
