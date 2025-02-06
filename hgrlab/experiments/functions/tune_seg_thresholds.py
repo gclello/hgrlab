@@ -19,22 +19,23 @@ def run(
     start_ts = datetime.datetime.now()
 
     classifier_names = options['classifier_names']
+
+    if 'classifier_options' in options.keys():
+        classifier_options = options['classifier_options']
+    else:
+        classifier_options = None
+
     folds = options['cv_folds']
-
-    feature_window_length = options['feature_window_length']
-    feature_overlap_length = options['feature_overlap_length']
-
-    dtw_impl = options['dtw_impl']
 
     if 'cv_options' in options.keys():
         cv_options = options['cv_options']
     else:
         cv_options = None
 
-    if 'classifier_options' in options.keys():
-        classifier_options = options['classifier_options']
-    else:
-        classifier_options = None
+    feature_window_length = options['feature_window_length']
+    feature_overlap_length = options['feature_overlap_length']
+
+    dtw_impl = options['dtw_impl']
 
     task = 'Optimizing segmentation thresholds'
 
@@ -76,14 +77,19 @@ def run(
             current_classifier_options = None
 
         for user_id in user_ids:
+            if current_classifier_options and user_id in current_classifier_options:
+                current_user_classifier_options = current_classifier_options[user_id]
+            else:
+                current_user_classifier_options = None
+
             config = {
+                'classifier_name': classifier_name,
+                'classifier_options': current_user_classifier_options,
                 'threshold_min': threshold_min,
                 'threshold_max': threshold_max,
                 'threshold_direction': threshold_direction,
                 'cv_folds': folds,
                 'cv_options': cv_options,
-                'classifier_name': classifier_name,
-                'classifier_options': current_classifier_options,
                 'feature_set_config': {
                     'user_id': user_id,
                     'ds_name': dataset_name,
@@ -118,7 +124,7 @@ def run(
                     'optimized classifier %s for subject %2d of %2d' % (
                         classifier_name,
                         i+1,
-                         np.size(user_configs),
+                        np.size(user_configs),
                     )
                 )
                 
@@ -129,7 +135,7 @@ def run(
     end_ts = datetime.datetime.now()
 
     output_message = '%s\n%s\n' % (
-        'Optimum individual segmentation thresholds using 4-fold cross-validation',
+        'Optimum individual segmentation thresholds using %s-fold CV' % folds,
         'Lines: classifiers | Columns: subjects'
     )
     for classifier_id, classifier in enumerate(classifier_names):
