@@ -5,9 +5,14 @@ from ..utils import AssetManager
 from ..models.hgrdtw import k_fold_cost, FeatureSet
 from ..models.hgrdtw import build_classifier, fit, predict
 
-from ..experiments.data import emgepn10
-from ..experiments import run_experiments, download_assets
-from .functions import eval_hgr_systems, tune_seg_thresholds
+from .data import emgepn10
+from . import run_experiments, download_assets
+from .functions import eval_hgr_systems, tune_seg_thresholds, tune_hyperparams
+from .hyperparameters.delello_coppe2025 import generate_lr_options
+from .hyperparameters.delello_coppe2025 import generate_svm_options
+from .hyperparameters.delello_coppe2025 import generate_lda_options
+from .hyperparameters.delello_coppe2025 import generate_knn_options
+from .hyperparameters.delello_coppe2025 import generate_twsd_options
 
 def tune_segmentation_threshold(config):
     threshold_min = config['threshold_min']
@@ -52,12 +57,26 @@ def tune_segmentation_threshold(config):
         if errors == 0:
             break
 
-    optimum_index = np.argmin(thresholds_errors)
+    optimal_index = np.argmin(thresholds_errors)
 
     return {
-        'threshold': thresholds[optimum_index],
-        'errors': thresholds_errors[optimum_index],
-        'predictions': thresholds_predictions[optimum_index],
+        'threshold': thresholds[optimal_index],
+        'errors': thresholds_errors[optimal_index],
+        'predictions': thresholds_predictions[optimal_index],
+    }
+
+def get_k_fold_cost(config):
+    errors, predictions = k_fold_cost(
+        feature_set_config=config['feature_set_config'],
+        folds=config['cv_folds'],
+        classifier_name=config['classifier_name'],
+        cv_options=config['cv_options'],
+        classifier_options=config['classifier_options'],
+    )
+    
+    return {
+        'errors': errors,
+        'predictions': predictions,
     }
 
 def majority_voting(
@@ -183,26 +202,89 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
     fs_dir,
     user_ids,
     options,
+    pipeline_options = {
+        'skip_hyperparameters_tuning': False,
+    },
+    threshold_min=10,
+    threshold_max=20,
 ):
-    tuning_result = tune_seg_thresholds.run(
+    classifier_options = {
+        'svm': generate_svm_options(),
+        'lr': generate_lr_options(),
+        'lda': generate_lda_options(),
+        'knn': generate_knn_options(),
+        'twsd': generate_twsd_options(),
+    }
+
+    best_hyperparameters = {}
+    best_hyperparameters_messages = []
+    best_seg_thresholds_messages = []
+
+    if not pipeline_options['skip_hyperparameters_tuning']:
+        seg_tuning_result1 = tune_seg_thresholds.run(
+            dataset_name,
+            ds_dir,
+            fs_dir,
+            user_ids,
+            options,
+            threshold_direction='desc',
+            threshold_min=threshold_min,
+            threshold_max=threshold_max,
+            tune_segmentation_threshold=tune_segmentation_threshold,
+        )
+
+        best_seg_thresholds_messages.append(seg_tuning_result1['message'])
+        classifier_thresholds = {}
+
+        for i, classifier in enumerate(options['classifier_names']):
+            classifier_thresholds[classifier] = seg_tuning_result1['data'][i]
+
+        options['thresholds'] = classifier_thresholds
+
+        for i, classifier_name in enumerate(options['classifier_names']):
+            if classifier_name not in classifier_options.keys():
+                continue
+
+            options['classifier_name'] = classifier_name
+            options['classifier_options_list'] = classifier_options[classifier_name]
+
+            hyperparams_tuning_result = tune_hyperparams.run(
+                dataset_name,
+                ds_dir,
+                fs_dir,
+                user_ids,
+                options,
+                cost_function=get_k_fold_cost,
+            )
+
+            best_options = hyperparams_tuning_result['data']['best_options']
+            best_hyperparameters[classifier_name] = best_options
+            best_hyperparameters_messages.append(
+                hyperparams_tuning_result['message']
+            )
+
+        options['classifier_options'] = best_hyperparameters
+
+    seg_tuning_result2 = tune_seg_thresholds.run(
         dataset_name,
         ds_dir,
         fs_dir,
         user_ids,
         options,
         threshold_direction='desc',
-        threshold_min=10,
-        threshold_max=20,
+        threshold_min=threshold_min,
+        threshold_max=threshold_max,
         tune_segmentation_threshold=tune_segmentation_threshold,
     )
 
-    classifiers_thresholds = {}
+    best_seg_thresholds_messages.append(seg_tuning_result2['message'])
+    classifier_thresholds = {}
 
     for i, classifier in enumerate(options['classifier_names']):
-        classifiers_thresholds[classifier] = tuning_result['data'][i]
+        classifier_thresholds[classifier] = seg_tuning_result2['data'][i]
 
-    options['thresholds'] = classifiers_thresholds
-
+    options['thresholds'] = classifier_thresholds
+    
     eval_result = eval_hgr_systems.run(
         dataset_name,
         ds_dir,
@@ -213,8 +295,9 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
         eval_hgr_system=eval_hgr_system,
     )
 
-    eval_result['message'] = '{TUNING}\n\n{EVAL}'.format(
-        TUNING=tuning_result['message'],
+    eval_result['message'] = '{HYPER_TUNING}\n\n{SEG_TUNING}\n\n{EVAL}'.format(
+        HYPER_TUNING='\n\n'.join(best_hyperparameters_messages),
+        SEG_TUNING='\n\n'.join(best_seg_thresholds_messages),
         EVAL=eval_result['message'],
     )
 

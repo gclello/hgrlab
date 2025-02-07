@@ -83,7 +83,7 @@ def run(
             else:
                 current_user_classifier_options = None
 
-            optimum_threshold = thresholds[classifier_name][i]
+            optimal_threshold = thresholds[classifier_name][i]
 
             config = {
                 'classifier_name': classifier_name,
@@ -98,7 +98,7 @@ def run(
                     'stft_window_length': 25,
                     'stft_window_overlap': 10,
                     'stft_nfft': 50,
-                    'activity_threshold': optimum_threshold,
+                    'activity_threshold': optimal_threshold,
                     'activity_extra_samples': 25,
                     'activity_min_length': 100,
                     'feature_window_length': feature_window_length,
@@ -140,7 +140,7 @@ def run(
 
     acc_by_classifier_output = ''
     for classifier_id, classifier in enumerate(classifier_names):
-        acc_by_classifier_output = '%s\n%03s: %.1f \u00B1 %.1f' % (
+        acc_by_classifier_output = '%s\n%04s: %.1f \u00B1 %.1f' % (
             acc_by_classifier_output,
             classifier,
             accuracy_mean[classifier_id] * 100,

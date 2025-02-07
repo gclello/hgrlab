@@ -3,7 +3,7 @@ import numpy as np
 import concurrent.futures
 import multiprocessing as mp
 
-from ...experiments import print_message, print_result, print_progress, print_line_break
+from ...experiments import print_message, print_progress, print_line_break
 
 def run(
     dataset_name,
@@ -47,7 +47,7 @@ def run(
     print_message('Classifiers: %s' % classifier_names)
     print_message('Number of subjects: %d' % np.size(user_ids))
 
-    optimum_thresholds = np.zeros((np.size(classifier_names), np.size(user_ids)), dtype=int)
+    optimal_thresholds = np.zeros((np.size(classifier_names), np.size(user_ids)), dtype=int)
     threshold_errors = np.zeros((np.size(classifier_names), np.size(user_ids)), dtype=int)
     threshold_predictions = np.zeros((np.size(classifier_names), np.size(user_ids)), dtype=int)
 
@@ -121,43 +121,42 @@ def run(
                 print_progress(
                     task,
                     get_progress(classifier_id, i+1),
-                    'optimized classifier %s for subject %2d of %2d' % (
+                    'tuned classifier %s for subject %2d of %2d' % (
                         classifier_name,
                         i+1,
                         np.size(user_configs),
                     )
                 )
                 
-                optimum_thresholds[classifier_id,i] = result['threshold']
+                optimal_thresholds[classifier_id,i] = result['threshold']
                 threshold_errors[classifier_id,i] = result['errors']
                 threshold_predictions[classifier_id,i] = result['predictions']
 
     end_ts = datetime.datetime.now()
 
     output_message = '%s\n%s\n' % (
-        'Optimum individual segmentation thresholds using %s-fold CV' % folds,
-        'Lines: classifiers | Columns: subjects'
+        'Optimal subject-specific segmentation thresholds using %s-fold CV' % folds,
+        'Lines: classifiers | Data: best segmentation thresholds by user'
     )
     for classifier_id, classifier in enumerate(classifier_names):
         output_message = output_message + '\n%03s: %s' % (
             classifier,
-            optimum_thresholds[classifier_id],
+            optimal_thresholds[classifier_id],
         )
 
-    print_line_break()
-    print_message('Validation accuracy:')
+    output_message = '%s\n\nValidation accuracy' % output_message
 
     for classifier_id, classifier in enumerate(classifier_names):
         errors = threshold_errors[classifier_id].sum()
         predictions = threshold_predictions[classifier_id].sum()
 
-        print_result('%03s_%d-fold_CV_acc = %.1f%% (%d/%d)' % (
+        output_message = '%s\n%03s = %.1f%% (%d/%d)' % (
+            output_message,
             classifier,
-            folds,
             (1 - errors / predictions) * 100,
             errors,
             predictions,
-        ))
+        )
 
     print_line_break()
     print_message(
@@ -167,6 +166,6 @@ def run(
     )
 
     return {
-        'data': optimum_thresholds,
+        'data': optimal_thresholds,
         'message': output_message,
     }
