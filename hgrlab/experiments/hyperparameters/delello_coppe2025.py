@@ -6,6 +6,7 @@ def generate_svm_options(log_samples=10):
     regularizations = np.logspace(-4, 4, log_samples)
     gammas = np.logspace(-4, 4, log_samples)
     default_tolerance = 0.001
+    default_cache_size = 8192
 
     options = []
 
@@ -16,6 +17,7 @@ def generate_svm_options(log_samples=10):
                     'kernel': kernel,
                     'C': regularization,
                     'tol': default_tolerance,
+                    'cache_size': default_cache_size,
                 })
             
             else:    
@@ -25,6 +27,7 @@ def generate_svm_options(log_samples=10):
                         'C': regularization,
                         'gamma': gamma,
                         'tol': default_tolerance,
+                        'cache_size': default_cache_size,
                     })
 
     return options
@@ -74,12 +77,14 @@ def generate_lr_options(log_samples=10):
 
 def generate_lda_options():
     solvers = ['svd', 'lsqr']
+    default_tolerance = 0.0001
     
     options = []
     
     for solver in solvers:
         options.append({
             'solver': solver,
+            'tol': default_tolerance,
         })
     
     return options

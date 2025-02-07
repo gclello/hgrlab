@@ -24,28 +24,41 @@ def build_classifier(classifier_name, classifier_options={}):
         ))
     elif classifier_name == 'svm':
         model = sklearn.svm.SVC(**merge_options({
-            'cache_size': 8192,
-            'gamma': 'auto',
+            'kernel': 'rbf',
+            'C': 1.0,
+            'gamma': 'scale',
+            'tol': 0.001,
+            'cache_size': 200,
             },
             classifier_options,
         ))
     elif classifier_name == 'lr':
         model = sklearn.linear_model.LogisticRegression(**merge_options({
-                'solver': 'liblinear',
+                'solver': 'lbfgs',
                 'penalty': 'l2',
+                'C': 1.0,
+                'tol': 0.0001,
+                'max_iter': 100,
+
             },
             classifier_options,
         ))
     elif classifier_name == 'lda':
         model = sklearn.discriminant_analysis.LinearDiscriminantAnalysis(
-            **merge_options(
-                {'solver': 'svd'},
+            **merge_options({
+                    'solver': 'svd',
+                    'tol': 0.0001,
+                },
                 classifier_options,
             )
         )
     elif classifier_name == 'knn':
         model = sklearn.neighbors.KNeighborsClassifier(**merge_options({
                 'n_neighbors': 5,
+                'weights': 'uniform',
+                'algorithm': 'auto',
+                'metric': 'minkowski',
+                'p': 2,
             },
             classifier_options
         ))

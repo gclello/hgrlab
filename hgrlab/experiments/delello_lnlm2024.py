@@ -96,6 +96,11 @@ def eval_hgr_system(config):
     experiments = config['experiments']
     classifier_name = config['classifier_name']
 
+    if 'classifier_options' in config.keys():
+        classifier_options = config['classifier_options']
+    else:
+        classifier_options = None
+
     config['feature_set_config']['ds_type'] = 'training'
     fs_training = FeatureSet.build_and_extract(config['feature_set_config'])
     X_train = fs_training.get_data('dtw')
@@ -114,7 +119,7 @@ def eval_hgr_system(config):
     trials = np.zeros((experiments),dtype=np.uint32)
 
     for experiment in np.arange(0, experiments):
-        model = build_classifier(classifier_name)
+        model = build_classifier(classifier_name, classifier_options)
         fit(model, X_train, y_train)
 
         prediction = np.full((test_trials,), 'relax', dtype='U14')
@@ -185,6 +190,7 @@ def main():
     experiment = 'lnlm2024'
     dataset_name='emgepn10'
     dtw_impl = 'fastdtw'
+    user_ids = np.arange(1, 11)
 
     base_dir = os.path.join(
         AssetManager.get_base_dir(),
@@ -210,6 +216,20 @@ def main():
             'dt':  [11, 17, 19, 12, 18, 14, 12, 20, 10, 13],
         },
     }
+
+    classifier_options = {
+        'svm': {'kernel': 'rbf', 'C': 1.0, 'gamma': 'auto', 'tol': 0.001, 'cache_size': 8192},
+        'lr':  {'solver': 'liblinear', 'penalty': 'l2', 'C': 1.0, 'tol': 0.0001, 'max_iter': 100},
+        'lda': {'solver': 'svd', 'tol': 0.0001},
+        'knn': {'n_neighbors': 5, 'weights': 'uniform', 'metric': 'euclidean'},
+        'dt':  {},
+    }
+
+    user_classifier_options = {}
+    for key in classifier_options.keys():
+        user_classifier_options[key] = {}
+        for user_id in user_ids:
+            user_classifier_options[key][user_id] = classifier_options[key]
 
     semg_assets = {
         'fastdtw': {
@@ -238,7 +258,7 @@ def main():
         dataset_name=dataset_name,
         ds_dir=ds_dir,
         fs_dir=fs_dir,
-        user_ids=np.arange(1, 11),
+        user_ids=user_ids,
         setup=setup,
         experiments=[
             tune_segmentation_thresholds_by_classifier_and_user,
@@ -254,6 +274,7 @@ def main():
                 'knn',
                 'dt',
             ],
+            'classifier_options': user_classifier_options,
             'thresholds': thresholds[dtw_impl],
             'feature_window_length': 500,
             'feature_overlap_length': 490,
