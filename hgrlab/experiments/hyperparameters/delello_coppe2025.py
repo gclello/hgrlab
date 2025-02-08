@@ -110,6 +110,17 @@ def generate_knn_options():
     
     return options
 
+def generate_dt_options():
+    criteria = ['gini', 'entropy', 'log_loss']
+    options = []
+    
+    for criterion in criteria:
+        options.append({
+            'criterion': criterion,
+        })
+    
+    return options
+
 def generate_twsd_options():
     address_sizes = np.arange(4, 49, 4)
     thermometer_size_powers = np.arange(3, 15)
