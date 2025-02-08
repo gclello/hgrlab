@@ -17,11 +17,7 @@ def run(
 
     thresholds = options['thresholds']
     classifier_name = options['classifier_name']
-
-    if 'classifier_options_list' in options.keys():
-        classifier_options_list = options['classifier_options_list']
-    else:
-        classifier_options_list = None
+    classifier_options_list = options['classifier_options_list']
 
     folds = options['cv_folds']
 
