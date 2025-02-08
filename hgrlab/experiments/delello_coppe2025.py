@@ -8,12 +8,7 @@ from ..models.hgrdtw import build_classifier, fit, predict
 from .data import emgepn10
 from . import run_experiments, download_assets
 from .functions import eval_hgr_systems, tune_seg_thresholds, tune_hyperparams
-from .hyperparameters.delello_coppe2025 import generate_lr_options
-from .hyperparameters.delello_coppe2025 import generate_svm_options
-from .hyperparameters.delello_coppe2025 import generate_lda_options
-from .hyperparameters.delello_coppe2025 import generate_knn_options
-from .hyperparameters.delello_coppe2025 import generate_dt_options
-from .hyperparameters.delello_coppe2025 import generate_twsd_options
+from .hyperparameters import delello_coppe2025 as hypeparams
 
 def tune_segmentation_threshold(config):
     threshold_min = config['threshold_min']
@@ -241,12 +236,12 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
 
     for experiment_id in np.arange(0, experiment_runs):
         classifier_options = {
-            'svm': generate_svm_options(),
-            'lr': generate_lr_options(),
-            'lda': generate_lda_options(),
-            'knn': generate_knn_options(),
-            'dt': generate_dt_options(),
-            'twsd': generate_twsd_options(),
+            'svm': hypeparams.generate_svm_options(),
+            'lr': hypeparams.generate_lr_options(),
+            'lda': hypeparams.generate_lda_options(),
+            'knn': hypeparams.generate_knn_options(),
+            'dt': hypeparams.generate_dt_options(),
+            'twsd': hypeparams.generate_twsd_options(),
         }
 
         best_hyperparameters = {}
@@ -292,6 +287,14 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
 
                 for i, classifier_name in enumerate(classifier_names):
                     if classifier_name not in classifier_options.keys():
+                        continue
+                    elif len(classifier_options[classifier_name]) == 0:
+                        continue
+                    elif len(classifier_options[classifier_name]) == 1:
+                        single_option = classifier_options[classifier_name][0]
+                        best_hyperparameters[classifier_name] = {}
+                        for i, user_id in enumerate(user_ids):
+                            best_hyperparameters[classifier_name][user_id] = single_option
                         continue
 
                     options['classifier_name'] = classifier_name
