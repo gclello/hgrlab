@@ -203,19 +203,32 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
     fs_dir,
     user_ids,
     options,
-    experiment_runs=1,
-    pipeline_options={
-        'skip_hyperparameters_tuning': False,
-        'random_hyperparameters_tuning': False,
-        'eval_experiment_runs': 100,
-    },
-    threshold_min=10,
-    threshold_max=20,
+    default_experiment_runs=1,
+    default_min_theshold=10,
+    default_max_theshold=20,
+    default_tune_hyperparams_skip=False,
+    default_tune_hyperparams_random=False,
+    default_eval_experiment_runs=100,
 ):
     classifier_names = options['classifier_names']
     number_of_classifiers = np.size(classifier_names)
     number_of_users = np.size(user_ids)
-    eval_experiment_runs = pipeline_options['eval_experiment_runs']
+
+    if 'pipeline' in options.keys():
+        pipeline_options = options['pipeline']
+        experiment_runs = pipeline_options['experiment_runs']
+        threshold_min = pipeline_options['tune_seg_threshold']['threshold_min']
+        threshold_max = pipeline_options['tune_seg_threshold']['threshold_max']
+        skip_hyperparams_tuning = pipeline_options['tune_hyperparams']['skip']
+        randomize_hyperparams_tuning = pipeline_options['tune_hyperparams']['random']
+        eval_experiment_runs = pipeline_options['eval']['experiment_runs']
+    else:
+        experiment_runs = default_experiment_runs
+        threshold_min = default_min_theshold
+        threshold_max = default_max_theshold
+        skip_hyperparams_tuning = default_tune_hyperparams_skip
+        randomize_hyperparams_tuning = default_tune_hyperparams_random
+        eval_experiment_runs = default_eval_experiment_runs
 
     accuracy = np.zeros((
         experiment_runs,
@@ -240,8 +253,8 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
         best_hyperparameters_messages = []
         best_seg_thresholds_messages = []
 
-        if not pipeline_options['skip_hyperparameters_tuning']:
-            if pipeline_options['random_hyperparameters_tuning']:
+        if not skip_hyperparams_tuning:
+            if randomize_hyperparams_tuning:
                 rng = np.random.default_rng()
                 for i, classifier_name in enumerate(classifier_names):
                     if classifier_name not in classifier_options.keys():
@@ -373,6 +386,20 @@ def main():
                 'dt',
                 'twsd',
             ],
+            'pipeline': {
+                'experiment_runs': 1,
+                'tune_seg_threshold': {
+                    'threshold_min': 10,
+                    'threshold_max': 20,
+                },
+                'tune_hyperparams': {
+                    'skip': False,
+                    'random': False,
+                },
+                'eval': {
+                    'experiment_runs': 100,
+                },
+            },
         },
         'lnlm2024': {
             'dtw_impl': 'fastdtw',
