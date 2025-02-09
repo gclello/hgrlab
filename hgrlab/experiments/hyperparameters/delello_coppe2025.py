@@ -3,8 +3,8 @@ import numpy as np
 def generate_svm_options(log_samples=10):
     kernels = ['linear', 'rbf', 'poly', 'sigmoid']
     
-    regularizations = np.logspace(-4, 4, log_samples)
-    gammas = np.logspace(-4, 4, log_samples)
+    regularizations = np.logspace(-6, 3, log_samples)
+    gammas = np.logspace(-4, 1, 6)
     default_tolerance = 0.001
     default_cache_size = 8192
 
@@ -51,7 +51,7 @@ def generate_lr_options(log_samples=10):
         'saga': ['elasticnet', 'l2', 'l1'],
     }
 
-    regularizations = np.logspace(-4, 4, log_samples)
+    regularizations = np.logspace(-6, 3, log_samples)
     default_tolerance = 0.0001
     default_max_iterations = 200
 
