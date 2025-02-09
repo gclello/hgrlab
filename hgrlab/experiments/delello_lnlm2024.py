@@ -36,7 +36,7 @@ def tune_segmentation_threshold(config):
     for threshold_id, threshold in enumerate(thresholds):
         config['feature_set_config']['activity_threshold'] = threshold
 
-        errors, predictions = k_fold_cost(
+        result = k_fold_cost(
             feature_set_config=config['feature_set_config'],
             folds=config['cv_folds'],
             classifier_name=config['classifier_name'],
@@ -44,10 +44,10 @@ def tune_segmentation_threshold(config):
             classifier_options=classifier_options,
         )
 
-        thresholds_errors[threshold_id] = errors
-        thresholds_predictions[threshold_id] = predictions
+        thresholds_errors[threshold_id] = result['fold_errors'].sum()
+        thresholds_predictions[threshold_id] = result['fold_predictions'].sum()
 
-        if errors == 0:
+        if thresholds_errors[threshold_id] == 0:
             break
 
     return {

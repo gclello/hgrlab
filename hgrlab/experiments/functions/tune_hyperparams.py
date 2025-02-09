@@ -114,8 +114,8 @@ def run(
                     )
                 )
                 
-                options_errors[i,j] = result['errors']
-                options_predictions[i,j] = result['predictions']
+                options_errors[i,j] = result['fold_errors'].sum()
+                options_predictions[i,j] = result['fold_predictions'].sum()
                 if options_errors[i,j] == 0:
                     break
 

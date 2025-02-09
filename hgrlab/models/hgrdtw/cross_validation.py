@@ -73,9 +73,9 @@ def k_fold_cost(
     fs = FeatureSet.build_and_extract(feature_set_config)
     features = fs.get_data('dtw')
     labels = fs.get_data('labels')
-    
-    total_errors = 0
-    total_predictions = 0
+
+    fold_errors = np.zeros(folds,dtype=np.uint32)
+    fold_predictions = np.zeros(folds,dtype=np.uint32)
     
     for fold in np.arange(0, folds):
         if val_size_per_class is not None:
@@ -103,7 +103,10 @@ def k_fold_cost(
         correct_predictions = np.count_nonzero(predictions == y_val)
         errors = number_of_predictions - correct_predictions
 
-        total_predictions = total_predictions + number_of_predictions
-        total_errors = total_errors + errors
+        fold_errors[fold] = errors
+        fold_predictions[fold] = number_of_predictions
     
-    return total_errors, total_predictions
+    return {
+        'fold_errors': fold_errors,
+        'fold_predictions': fold_predictions,
+    }
