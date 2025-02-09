@@ -32,6 +32,7 @@ def tune_segmentation_threshold(config):
 
     HUGE_ERROR = 1000000
     thresholds_errors = np.full(np.size(thresholds), HUGE_ERROR, dtype=np.uint32)
+    thresholds_errors_std = np.zeros((np.size(thresholds)),dtype=np.uint32)
     thresholds_predictions = np.zeros((np.size(thresholds)),dtype=np.uint32)
 
     feature_set_config = config['feature_set_config']
@@ -48,17 +49,20 @@ def tune_segmentation_threshold(config):
         )
 
         thresholds_errors[threshold_id] = result['fold_errors'].sum()
+        thresholds_errors_std[threshold_id] = result['fold_errors'].std(ddof=1)
         thresholds_predictions[threshold_id] = result['fold_predictions'].sum()
 
-        if thresholds_errors[threshold_id] == 0:
-            break
-
-    optimal_index = np.argmin(thresholds_errors)
+    min_threshold_error = np.min(thresholds_errors)
+    optimal_indices = np.where(thresholds_errors == min_threshold_error)[0]
+    best_index = optimal_indices[
+        np.argmin(thresholds_errors_std[optimal_indices])
+    ]
 
     return {
-        'threshold': thresholds[optimal_index],
-        'errors': thresholds_errors[optimal_index],
-        'predictions': thresholds_predictions[optimal_index],
+        'threshold': thresholds[best_index],
+        'errors': thresholds_errors[best_index],
+        'predictions': thresholds_predictions[best_index],
+        'ties': np.size(optimal_indices),
     }
 
 def get_k_fold_cost(config):
@@ -199,6 +203,7 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
     default_experiment_runs=1,
     default_min_theshold=10,
     default_max_theshold=20,
+    default_threshold_direction='desc',
     default_tune_hyperparams_skip=False,
     default_tune_hyperparams_random=False,
     default_eval_experiment_runs=100,
@@ -212,6 +217,7 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
         experiment_runs = pipeline_options['experiment_runs']
         threshold_min = pipeline_options['tune_seg_threshold']['threshold_min']
         threshold_max = pipeline_options['tune_seg_threshold']['threshold_max']
+        threshold_direction = pipeline_options['tune_seg_threshold']['threshold_direction']
         skip_hyperparams_tuning = pipeline_options['tune_hyperparams']['skip']
         randomize_hyperparams_tuning = pipeline_options['tune_hyperparams']['random']
         eval_experiment_runs = pipeline_options['eval']['experiment_runs']
@@ -219,6 +225,7 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
         experiment_runs = default_experiment_runs
         threshold_min = default_min_theshold
         threshold_max = default_max_theshold
+        threshold_direction = default_threshold_direction
         skip_hyperparams_tuning = default_tune_hyperparams_skip
         randomize_hyperparams_tuning = default_tune_hyperparams_random
         eval_experiment_runs = default_eval_experiment_runs
@@ -269,7 +276,7 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
                     fs_dir,
                     user_ids,
                     options,
-                    threshold_direction='desc',
+                    threshold_direction=threshold_direction,
                     threshold_min=threshold_min,
                     threshold_max=threshold_max,
                     tune_segmentation_threshold=tune_segmentation_threshold,
@@ -321,7 +328,7 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
             fs_dir,
             user_ids,
             options,
-            threshold_direction='desc',
+            threshold_direction=threshold_direction,
             threshold_min=threshold_min,
             threshold_max=threshold_max,
             tune_segmentation_threshold=tune_segmentation_threshold,
@@ -451,6 +458,7 @@ def main():
                 'tune_seg_threshold': {
                     'threshold_min': 10,
                     'threshold_max': 20,
+                    'threshold_direction': 'desc',
                 },
                 'tune_hyperparams': {
                     'skip': False,

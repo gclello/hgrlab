@@ -54,6 +54,7 @@ def tune_segmentation_threshold(config):
         'threshold': thresholds[np.argmax(thresholds_errors)],
         'errors': thresholds_errors[np.argmin(thresholds_errors)],
         'predictions': thresholds_predictions[np.argmin(thresholds_errors)],
+        'ties': np.size(np.where(thresholds_errors == np.min(thresholds_errors))[0])
     }
 
 def eliminate_consecutive_gestures(

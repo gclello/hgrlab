@@ -50,6 +50,7 @@ def run(
     optimal_thresholds = np.zeros((np.size(classifier_names), np.size(user_ids)), dtype=int)
     threshold_errors = np.zeros((np.size(classifier_names), np.size(user_ids)), dtype=int)
     threshold_predictions = np.zeros((np.size(classifier_names), np.size(user_ids)), dtype=int)
+    threshold_ties = np.zeros((np.size(classifier_names), np.size(user_ids)), dtype=int)
 
     num_workers = mp.cpu_count()
 
@@ -131,6 +132,7 @@ def run(
                 optimal_thresholds[classifier_id,i] = result['threshold']
                 threshold_errors[classifier_id,i] = result['errors']
                 threshold_predictions[classifier_id,i] = result['predictions']
+                threshold_ties[classifier_id,i] = result['ties']
 
     end_ts = datetime.datetime.now()
 
@@ -149,13 +151,15 @@ def run(
     for classifier_id, classifier in enumerate(classifier_names):
         errors = threshold_errors[classifier_id].sum()
         predictions = threshold_predictions[classifier_id].sum()
+        ties = threshold_ties[classifier_id]
 
-        output_message = '%s\n%03s = %.1f%% (%d/%d)' % (
+        output_message = '%s\n%03s = %.1f%% (%d/%d) | Ties: %s' % (
             output_message,
             classifier,
             (1 - errors / predictions) * 100,
             errors,
             predictions,
+            ties,
         )
 
     print_line_break()

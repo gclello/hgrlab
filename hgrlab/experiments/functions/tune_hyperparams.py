@@ -43,8 +43,10 @@ def run(
     print_message('Number of hyperparameter configurations: %d' % np.size(classifier_options_list))
 
     options_errors = np.zeros((np.size(user_ids), np.size(classifier_options_list)), dtype=int)
+    options_errors_std = np.zeros((np.size(user_ids), np.size(classifier_options_list)), dtype=int)
     options_predictions = np.zeros((np.size(user_ids), np.size(classifier_options_list)), dtype=int)
     options_best_indices = np.zeros((np.size(user_ids)), dtype=int)
+    options_ties = np.zeros((np.size(user_ids)), dtype=int)
     best_options = {}
 
     num_workers = mp.cpu_count()
@@ -115,9 +117,8 @@ def run(
                 )
                 
                 options_errors[i,j] = result['fold_errors'].sum()
+                options_errors_std[i,j] = result['fold_errors'].std(ddof=1)
                 options_predictions[i,j] = result['fold_predictions'].sum()
-                if options_errors[i,j] == 0:
-                    break
 
     end_ts = datetime.datetime.now()
 
@@ -139,10 +140,18 @@ def run(
     )
 
     for i, user_id in enumerate(user_ids):
-        options_best_indices[i] = np.argmin(options_errors[i])
-        best_options[user_id] = classifier_options_list[options_best_indices[i]]
-        errors = options_errors[i][options_best_indices[i]]
-        predictions = options_predictions[i][options_best_indices[i]]
+        min_user_error = np.min(options_errors[i])
+        optimal_indices = np.where(options_errors[i] == min_user_error)[0]
+        best_index = optimal_indices[
+            np.argmin(options_errors_std[i][optimal_indices])
+        ]
+        options_ties[i] = np.size(optimal_indices)
+
+        options_best_indices[i] = best_index
+        best_options[user_id] = classifier_options_list[best_index]
+        errors = options_errors[i][best_index]
+        predictions = options_predictions[i][best_index]
+        
         table_val_acc = '{PREVIOUS}\n#{SUBJ:2s}    {ACC:5.1f}%          {ERR} / {PRED}'.format(
             PREVIOUS=table_val_acc,
             SUBJ=str(user_id),
@@ -166,7 +175,10 @@ def run(
     return {
         'data': {
             'best_options': best_options,
-            'errors': options_predictions,
+            'best_indices': options_best_indices,
+            'ties': options_ties,
+            'errors': options_errors,
+            'std': options_errors_std,
             'predictions': options_predictions,
         },
         'message': '{TABLE_ACC}\n\n{TABLE_HYPERPARAMS}'.format(
