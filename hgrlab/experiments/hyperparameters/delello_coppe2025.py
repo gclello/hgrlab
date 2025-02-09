@@ -1,7 +1,7 @@
 import numpy as np
 
 def generate_svm_options(log_samples=10):
-    kernels = ['rbf', 'linear', 'poly', 'sigmoid']
+    kernels = ['linear', 'rbf', 'poly', 'sigmoid']
     
     regularizations = np.logspace(-4, 4, log_samples)
     gammas = np.logspace(-4, 4, log_samples)
