@@ -1,7 +1,8 @@
 import os
+import datetime
 import numpy as np
 
-from ..utils import AssetManager, plot_radar
+from ..utils import AssetManager, plot_radar, save_pickle
 from ..models.hgrdtw import k_fold_cost, FeatureSet
 from ..models.hgrdtw import build_classifier, fit, predict
 
@@ -208,6 +209,8 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
     default_tune_hyperparams_random=False,
     default_eval_experiment_runs=100,
 ):
+    start_ts = datetime.datetime.now()
+
     classifier_names = options['classifier_names']
     number_of_classifiers = np.size(classifier_names)
     number_of_users = np.size(user_ids)
@@ -237,23 +240,42 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
         eval_experiment_runs,
     ))
 
+    exp_config = {
+        'dataset_name': dataset_name,
+        'ds_dir': ds_dir,
+        'fs_dir': fs_dir,
+        'out_dir': out_dir,
+        'user_ids': user_ids,
+        'options': options,
+    }
+    exp_results = {}
     output_list = []
 
-    for experiment_id in np.arange(0, experiment_runs):
-        classifier_options = {
-            'svm': hypeparams.generate_svm_options(),
-            'lr': hypeparams.generate_lr_options(),
-            'lda': hypeparams.generate_lda_options(),
-            'knn': hypeparams.generate_knn_options(),
-            'dt': hypeparams.generate_dt_options(),
-            'twsd': hypeparams.generate_twsd_options(),
-        }
+    for exp_id in np.arange(0, experiment_runs):
+        exp_results[exp_id] = {}
 
         best_hyperparameters = {}
         best_hyperparameters_messages = []
         best_seg_thresholds_messages = []
 
+        exp_results[exp_id]['seg_tuning1'] = {}
+        exp_results[exp_id]['hyperparams_tuning'] = {}
+        exp_results[exp_id]['hyperparams_tuning']['options'] = {}
+        exp_results[exp_id]['hyperparams_tuning']['results'] = {}
+        exp_results[exp_id]['seg_tuning2'] = {}
+        exp_results[exp_id]['classifiers_eval'] = {}
+
         if not skip_hyperparams_tuning:
+            classifier_options = {
+                'svm': hypeparams.generate_svm_options(),
+                'lr': hypeparams.generate_lr_options(),
+                'lda': hypeparams.generate_lda_options(),
+                'knn': hypeparams.generate_knn_options(),
+                'dt': hypeparams.generate_dt_options(),
+                'twsd': hypeparams.generate_twsd_options(),
+            }
+            exp_results[exp_id]['hyperparams_tuning']['options'] = classifier_options
+
             if randomize_hyperparams_tuning:
                 rng = np.random.default_rng()
                 for i, classifier_name in enumerate(classifier_names):
@@ -281,6 +303,8 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
                     threshold_max=threshold_max,
                     tune_segmentation_threshold=tune_segmentation_threshold,
                 )
+
+                exp_results[exp_id]['seg_tuning1'] = seg_tuning_result1
 
                 best_seg_thresholds_messages.append(seg_tuning_result1['message'])
                 classifier_thresholds = {}
@@ -314,6 +338,8 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
                         cost_function=get_k_fold_cost,
                     )
 
+                    exp_results[exp_id]['hyperparams_tuning']['results'][classifier_name] = hyperparams_tuning_result
+
                     best_options = hyperparams_tuning_result['data']['best_options']
                     best_hyperparameters[classifier_name] = best_options
                     best_hyperparameters_messages.append(
@@ -334,6 +360,8 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
             tune_segmentation_threshold=tune_segmentation_threshold,
         )
 
+        exp_results[exp_id]['seg_tuning2'] = seg_tuning_result2
+
         best_seg_thresholds_messages.append(seg_tuning_result2['message'])
         classifier_thresholds = {}
 
@@ -352,6 +380,8 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
             eval_hgr_system=eval_hgr_system,
         )
 
+        exp_results[exp_id]['classifiers_eval'] = eval_result
+
         eval_result['message'] = '{HYPER_TUNING}\n\n{SEG_TUNING}\n\n{EVAL}'.format(
             HYPER_TUNING='\n\n'.join(best_hyperparameters_messages),
             SEG_TUNING='\n\n'.join(best_seg_thresholds_messages),
@@ -360,7 +390,7 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
 
         output_list.append(eval_result['message'])
 
-        accuracy[experiment_id,:,:,:] = eval_result['data'][:,:,:]
+        accuracy[exp_id,:,:,:] = eval_result['data'][:,:,:]
 
     output_list.append('## Mean accuracy')
     output_list.append(repr(accuracy.mean(axis=(0,2,3))))
@@ -371,13 +401,32 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
     accuracy_per_experiment = accuracy.mean(axis=2)
     std_per_experiment = accuracy_per_experiment.std(ddof=1, axis=(0,2))
 
-    save_radar_plot(
-        dataset_name,
-        classifier_names,
-        accuracy_per_classifier,
-        std_per_experiment,
-        out_dir,
-    )
+    end_ts = datetime.datetime.now()
+
+    if out_dir is not None:
+        filename = '{DATE}_delello_coppe2025_{DS_NAME}'.format(
+            DATE=start_ts.strftime("%Y%m%dT%H%M%S"),
+            DS_NAME=dataset_name,
+        )
+            
+        save_pickle(
+            os.path.join(out_dir, '%s.%s' % (filename, 'pickle')),
+            {
+                'start_ts': start_ts,
+                'end_ts': end_ts,
+                'config': exp_config,
+                'results': exp_results,
+                'outputs': output_list,
+            }
+        )
+
+        save_radar_plot(
+            dataset_name,
+            classifier_names,
+            accuracy_per_classifier,
+            std_per_experiment,
+            os.path.join(out_dir, '%s_%s.%s' % (filename, 'radar', 'png'))
+        )
 
     return {'message': '\n\n'.join(output_list)}
 
@@ -386,9 +435,9 @@ def save_radar_plot(
     classifier_names,
     values,
     std,
-    out_dir,
+    output_path,
 ):
-    if out_dir is None:
+    if output_path is None:
         return
     
     config = {
@@ -425,7 +474,7 @@ def save_radar_plot(
         ticks=config[dataset_name]['ticks'],
         range_min=config[dataset_name]['range_min'],
         range_max=config[dataset_name]['range_max'],
-        output_path=os.path.join(out_dir, '%s_radar.png' % dataset_name),
+        output_path=output_path,
     )
 
 def main():
