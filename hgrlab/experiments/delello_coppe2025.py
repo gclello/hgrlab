@@ -1,7 +1,7 @@
 import os
 import numpy as np
 
-from ..utils import AssetManager
+from ..utils import AssetManager, plot_radar
 from ..models.hgrdtw import k_fold_cost, FeatureSet
 from ..models.hgrdtw import build_classifier, fit, predict
 
@@ -196,6 +196,7 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
     dataset_name,
     ds_dir,
     fs_dir,
+    out_dir,
     user_ids,
     options,
     default_experiment_runs=1,
@@ -362,7 +363,66 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
     output_list.append('## Std')
     output_list.append(repr(accuracy.std(axis=(0,2,3), ddof=1)))
 
+    accuracy_per_classifier = accuracy.mean(axis=(0,2,3))
+    accuracy_per_experiment = accuracy.mean(axis=2)
+    std_per_experiment = accuracy_per_experiment.std(ddof=1, axis=(0,2))
+
+    save_radar_plot(
+        dataset_name,
+        classifier_names,
+        accuracy_per_classifier,
+        std_per_experiment,
+        out_dir,
+    )
+
     return {'message': '\n\n'.join(output_list)}
+
+def save_radar_plot(
+    dataset_name,
+    classifier_names,
+    values,
+    std,
+    out_dir,
+):
+    if out_dir is None:
+        return
+    
+    config = {
+        'emgepn10': {
+            'ticks': [86, 88, 90, 92, 94, 96],
+            'range_min': 85,
+            'range_max': 97,
+        },
+        'emgepn120': {
+            'ticks': [96, 96.5, 97, 97.5, 98],
+            'range_min': 86,
+            'range_max': 98.2,
+        },
+    }
+
+    titles = {
+        'svm': 'Support Vector Machine',
+        'lr': 'Logistic Regression',
+        'lda': 'Linear Discriminant Analysis',
+        'knn': '<i>K</i>-Nearest Neighbors',
+        'dt': 'Decision Tree',
+        'twsd': 'WiSARD',
+    }
+
+    effective_titles = []
+    for classifier in classifier_names:
+        if classifier in titles.keys():
+            effective_titles.append(titles[classifier])
+
+    plot_radar(
+        effective_titles,
+        values*100,
+        std*100,
+        ticks=config[dataset_name]['ticks'],
+        range_min=config[dataset_name]['range_min'],
+        range_max=config[dataset_name]['range_max'],
+        output_path=os.path.join(out_dir, '%s_radar.png' % dataset_name),
+    )
 
 def main():
     publication = "A Comparative Study of Classifiers for sEMG-Based Hand Gesture Recognition Systems"
@@ -450,6 +510,7 @@ def main():
 
     profile = config['PROFILE'] if 'PROFILE' in config.keys() else 'coppe2025'
     ds_name = config['DS_NAME'] if 'DS_NAME' in config.keys() else 'emgepn10'
+    out_dir = config['OUT_DIR'] if 'OUT_DIR' in config.keys() else None
 
     base_dir = os.path.join(
         AssetManager.get_base_dir(),
@@ -490,6 +551,7 @@ def main():
             tune_and_eval_hgr_systems_by_classifier_and_user,
         ],
         options=profiles[profile],
+        out_dir=out_dir,
     )
 
 if __name__ == '__main__':

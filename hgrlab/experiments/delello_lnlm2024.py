@@ -146,6 +146,7 @@ def tune_segmentation_thresholds_by_classifier_and_user(
     dataset_name,
     ds_dir,
     fs_dir,
+    out_dir,
     user_ids,
     options,
 ):
@@ -164,6 +165,7 @@ def eval_hgr_systems_by_classifier_and_user(
     dataset_name,
     ds_dir,
     fs_dir,
+    out_dir,
     user_ids,
     options,
 ):
@@ -279,7 +281,7 @@ def main():
             'feature_window_length': 500,
             'feature_overlap_length': 490,
             'dtw_impl': dtw_impl,
-        }
+        },
     )
 
 if __name__ == '__main__':

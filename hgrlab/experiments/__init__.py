@@ -10,6 +10,7 @@ def run_experiments(
     user_ids,
     options={},
     setup=None,
+    out_dir=None,
 ):
     start_ts = datetime.datetime.now()
 
@@ -38,6 +39,7 @@ def run_experiments(
             dataset_name=dataset_name,
             ds_dir=ds_dir,
             fs_dir=fs_dir,
+            out_dir=out_dir,
             user_ids=user_ids,
             options=options,
         )
