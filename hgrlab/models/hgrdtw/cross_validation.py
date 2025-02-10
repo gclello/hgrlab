@@ -69,10 +69,27 @@ def k_fold_cost(
         random_state = cv_options['random_state']
     else:
         random_state = None
-    
-    fs = FeatureSet.build_and_extract(feature_set_config)
-    features = fs.get_data('dtw')
-    labels = fs.get_data('labels')
+
+    if cv_options is not None and 'user_independent_cv' in cv_options:
+        user_independent_cv = cv_options['user_independent_cv']
+    else:
+        user_independent_cv = None
+
+    if user_independent_cv is None:
+        fs = FeatureSet.build_and_extract(feature_set_config)
+        features = fs.get_data('dtw')
+        labels = fs.get_data('labels')
+    else:
+        features_list = []
+        labels_list = []
+        for i, user_id in enumerate(user_independent_cv):
+            feature_set_config['user_id'] = user_id
+            fs = FeatureSet.build_and_extract(feature_set_config)
+            features_list.append(fs.get_data('dtw'))
+            labels_list.append(fs.get_data('labels'))
+
+        features = np.concatenate([*features_list], axis=0)
+        labels = np.concatenate([*labels_list], axis=0)
 
     fold_errors = np.zeros(folds,dtype=np.uint32)
     fold_predictions = np.zeros(folds,dtype=np.uint32)

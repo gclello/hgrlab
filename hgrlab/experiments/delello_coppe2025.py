@@ -207,6 +207,7 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
     default_threshold_direction='desc',
     default_tune_hyperparams_skip=False,
     default_tune_hyperparams_random=False,
+    default_tune_hyperparams_user_independent_cv=False,
     default_eval_experiment_runs=100,
 ):
     start_ts = datetime.datetime.now()
@@ -223,6 +224,7 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
         threshold_direction = pipeline_options['tune_seg_threshold']['threshold_direction']
         skip_hyperparams_tuning = pipeline_options['tune_hyperparams']['skip']
         randomize_hyperparams_tuning = pipeline_options['tune_hyperparams']['random']
+        tune_hyperparams_user_independent_cv = pipeline_options['tune_hyperparams']['user_independent_cv']
         eval_experiment_runs = pipeline_options['eval']['experiment_runs']
     else:
         experiment_runs = default_experiment_runs
@@ -231,6 +233,7 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
         threshold_direction = default_threshold_direction
         skip_hyperparams_tuning = default_tune_hyperparams_skip
         randomize_hyperparams_tuning = default_tune_hyperparams_random
+        tune_hyperparams_user_independent_cv = default_tune_hyperparams_user_independent_cv
         eval_experiment_runs = default_eval_experiment_runs
 
     accuracy = np.zeros((
@@ -266,6 +269,12 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
         exp_results[exp_id]['classifiers_eval'] = {}
 
         if not skip_hyperparams_tuning:
+            if tune_hyperparams_user_independent_cv:
+                if not 'cv_options' in options.keys() or options['cv_options'] is None:
+                    options['cv_options'] = {}
+                
+                options['cv_options']['user_independent_cv'] = user_ids
+            
             classifier_options = {
                 'svm': hypeparams.generate_svm_options(),
                 'lr': hypeparams.generate_lr_options(),
@@ -341,12 +350,21 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
                     exp_results[exp_id]['hyperparams_tuning']['results'][classifier_name] = hyperparams_tuning_result
 
                     best_options = hyperparams_tuning_result['data']['best_options']
+
+                    if tune_hyperparams_user_independent_cv:
+                        for i, user_id in enumerate(user_ids):
+                            if user_id not in best_options.keys():
+                                best_options[user_id] = best_options[list(best_options.keys())[0]]
+                    
                     best_hyperparameters[classifier_name] = best_options
                     best_hyperparameters_messages.append(
                         hyperparams_tuning_result['message']
                     )
 
             options['classifier_options'] = best_hyperparameters
+
+            if tune_hyperparams_user_independent_cv:
+                options['cv_options']['user_independent_cv'] = None
 
         seg_tuning_result2 = tune_seg_thresholds.run(
             dataset_name,
@@ -512,6 +530,7 @@ def main():
                 'tune_hyperparams': {
                     'skip': False,
                     'random': False,
+                    'user_independent_cv': True,
                 },
                 'eval': {
                     'experiment_runs': 100,
