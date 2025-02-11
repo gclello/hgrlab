@@ -521,7 +521,7 @@ def main():
                 'twsd',
             ],
             'pipeline': {
-                'experiment_runs': 1,
+                'experiment_runs': 100,
                 'tune_seg_threshold': {
                     'threshold_min': 10,
                     'threshold_max': 20,
@@ -533,7 +533,7 @@ def main():
                     'user_independent_cv': True,
                 },
                 'eval': {
-                    'experiment_runs': 100,
+                    'experiment_runs': 1,
                 },
             },
         },
