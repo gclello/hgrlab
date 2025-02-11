@@ -1,9 +1,9 @@
 import numpy as np
 
-def generate_svm_options(log_samples=10):
+def generate_svm_options(log_samples=7):
     kernels = ['linear', 'rbf', 'poly', 'sigmoid']
     
-    regularizations = np.logspace(-6, 3, log_samples)
+    regularizations = np.logspace(-5, 1, log_samples)
     gammas = np.logspace(-4, 1, 6)
     default_tolerance = 0.001
     default_cache_size = 8192
