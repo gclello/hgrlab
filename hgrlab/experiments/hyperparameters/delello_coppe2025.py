@@ -1,9 +1,9 @@
 import numpy as np
 
-def generate_svm_options(log_samples=7):
-    kernels = ['linear', 'rbf', 'poly', 'sigmoid']
+def generate_svm_options():
+    kernels = ['linear', 'rbf', 'sigmoid']
     
-    regularizations = np.logspace(-5, 1, log_samples)
+    regularizations = np.logspace(-5, 1, 7)
     gammas = np.logspace(-4, 1, 6)
     default_tolerance = 0.001
     default_cache_size = 8192
@@ -32,7 +32,7 @@ def generate_svm_options(log_samples=7):
 
     return options
 
-def generate_lr_options(log_samples=10):
+def generate_lr_options():
     solvers = [
         'liblinear',
         'lbfgs',
@@ -51,7 +51,7 @@ def generate_lr_options(log_samples=10):
         'saga': ['elasticnet', 'l2', 'l1'],
     }
 
-    regularizations = np.logspace(-6, 3, log_samples)
+    regularizations = np.logspace(-6, 3, 10)
     default_tolerance = 0.0001
     default_max_iterations = 200
 
