@@ -319,7 +319,14 @@ def tune_and_eval_hgr_systems_by_classifier_and_user(
                 classifier_thresholds = {}
 
                 for i, classifier in enumerate(classifier_names):
-                    classifier_thresholds[classifier] = seg_tuning_result1['data'][i]
+                    if tune_hyperparams_user_independent_cv:
+                        classifier_thresholds[classifier] = np.full(
+                            (np.size(user_ids)),
+                            seg_tuning_result1['data'][i][0],
+                            dtype=int
+                        )
+                    else:
+                        classifier_thresholds[classifier] = seg_tuning_result1['data'][i]
 
                 options['thresholds'] = classifier_thresholds
 

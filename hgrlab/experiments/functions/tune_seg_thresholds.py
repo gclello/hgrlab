@@ -26,9 +26,14 @@ def run(
         classifier_options = None
 
     folds = options['cv_folds']
+    user_independent_cv = None
 
-    if 'cv_options' in options.keys():
+    if 'cv_options' in options.keys() and options['cv_options'] is not None:
         cv_options = options['cv_options']
+        if 'user_independent_cv' in cv_options.keys():
+            user_independent_cv = cv_options['user_independent_cv']
+            if user_independent_cv is not None:
+                user_ids = [user_independent_cv[0]]
     else:
         cv_options = None
 
