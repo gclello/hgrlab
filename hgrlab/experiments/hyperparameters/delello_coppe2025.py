@@ -91,8 +91,8 @@ def generate_lda_options():
 
 def generate_knn_options():
     neighbors = np.arange(1, 11)
-    weights = ['uniform', 'distance']
-    algorithms = ['ball_tree', 'kd_tree', 'brute']
+    weights = ['uniform']
+    algorithms = ['ball_tree']
     metrics = ['euclidean']
     
     options = []

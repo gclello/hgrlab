@@ -537,7 +537,7 @@ def main():
                 'tune_hyperparams': {
                     'skip': False,
                     'random': False,
-                    'user_independent_cv': True,
+                    'user_independent_cv': False,
                 },
                 'eval': {
                     'experiment_runs': 1,
