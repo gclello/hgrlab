@@ -111,7 +111,7 @@ def generate_knn_options():
     return options
 
 def generate_dt_options():
-    criteria = ['gini', 'entropy', 'log_loss']
+    criteria = ['gini', 'entropy']
     options = []
     
     for criterion in criteria:
