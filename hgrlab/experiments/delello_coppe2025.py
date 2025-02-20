@@ -474,7 +474,7 @@ def save_radar_plot(
         'emgepn120': {
             'ticks': [96, 96.5, 97, 97.5, 98],
             'range_min': 96,
-            'range_max': 98.2,
+            'range_max': 98.3,
         },
     }
 
